@@ -9,7 +9,7 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-6 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
           <div>
             <p className="font-body font-bold text-hustlegold tracking-wide mb-3">
-              WENA Runner Network — Mthatha
+              WENA Runner Network
             </p>
             <h1 className="font-display text-5xl md:text-6xl leading-[0.95] text-bone">
               Already in the shop?
@@ -18,7 +18,7 @@ export default function Home() {
             <p className="font-body text-bone/80 mt-5 max-w-md">
               Sign up as a Runner, and when you're already at a store, check
               the board for anyone nearby who needs something bought.
-              Buy it, hand it to a WENA courier, get paid same day.
+              Buy it, hand it to a courier, get paid same day.
             </p>
             <div className="flex flex-wrap gap-3 mt-8">
               <Link
@@ -46,12 +46,12 @@ export default function Home() {
           <div className="bg-steel border-2 border-hustlegold/40 p-1">
             <div className="border border-bone/10 p-4">
               <p className="font-body text-xs tracking-wide text-hustlegold mb-3">
-                LIVE BOARD (example)
+                Hot Zones
               </p>
               {[
-                { store: "Boxer, CBD", note: "6 to 10 items", fee: TIERS.medium.runnerCut },
-                { store: "Spar, Fortgale", note: "1 to 5 items", fee: TIERS.small.runnerCut },
-                { store: "Pick n Pay, CBD", note: "Heavy items", fee: TIERS.heavy.runnerCut },
+                { store: "Peoples Market", note: "6 to 10 items", fee: TIERS.medium.runnerCut },
+                { store: "Payless Trading", note: "1 to 5 items", fee: TIERS.small.runnerCut },
+                { store: "Hiba Traiding", note: "Heavy items", fee: TIERS.heavy.runnerCut },
               ].map((row, i) => (
                 <div
                   key={i}
@@ -77,12 +77,12 @@ export default function Home() {
             {
               step: "1",
               title: "Sign up",
-              body: "Give us your name, number, and the area you're usually around.",
+              body: "Provide us with your contact details, and the area you're usually around.",
             },
             {
               step: "2",
               title: "Get approved",
-              body: "We verify you and switch on your account.",
+              body: "Quick ID and contact verification takes under 24 hours",
             },
             {
               step: "3",
@@ -92,7 +92,7 @@ export default function Home() {
             {
               step: "4",
               title: "Buy & hand off",
-              body: "Buy the item, hand it to a WENA courier, and get paid.",
+              body: "Buy the item, hand it to a courier, and get paid.",
             },
           ].map((s) => (
             <div key={s.step} className="border-l-4 border-runnerred pl-4">
