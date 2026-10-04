@@ -2,33 +2,43 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [zone, setZone] = useState("");
   const [pin, setPin] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [idDoc, setIdDoc] = useState<File | null>(null);
+  const [selfie, setSelfie] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!idDoc || !selfie) {
+      setResult({ ok: false, message: "Please upload both your ID document and a selfie." });
+      return;
+    }
     setSubmitting(true);
     setResult(null);
     try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, zone, pin }),
-      });
+      const form = new FormData();
+      form.append("name", name);
+      form.append("phone", phone);
+      form.append("zone", zone);
+      form.append("pin", pin);
+      form.append("idNumber", idNumber);
+      form.append("idDocument", idDoc);
+      form.append("selfie", selfie);
+
+      const res = await fetch("/api/signup", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
       setResult({
         ok: true,
         message:
-          "You're signed up! We'll approve your account shortly — you'll be able to log in once you're switched on.",
+          "You're signed up! We'll check your ID and approve your account shortly — you'll be able to log in once you're switched on.",
       });
     } catch (err: any) {
       setResult({ ok: false, message: err.message });
@@ -59,9 +69,7 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className="font-body text-sm text-hustlegold block mb-1">
-              Phone number
-            </label>
+            <label className="font-body text-sm text-hustlegold block mb-1">Phone number</label>
             <input
               required
               type="tel"
@@ -97,13 +105,50 @@ export default function SignupPage() {
               className="w-full bg-steel border border-bone/20 px-4 py-3 font-body focus:outline-none focus:border-hustlegold"
             />
           </div>
+          <div>
+            <label className="font-body text-sm text-hustlegold block mb-1">
+              ID number
+            </label>
+            <input
+              required
+              value={idNumber}
+              onChange={(e) => setIdNumber(e.target.value)}
+              className="w-full bg-steel border border-bone/20 px-4 py-3 font-body focus:outline-none focus:border-hustlegold"
+            />
+          </div>
+          <div>
+            <label className="font-body text-sm text-hustlegold block mb-1">
+              Photo of your ID document
+            </label>
+            <input
+              required
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setIdDoc(e.target.files?.[0] || null)}
+              className="w-full bg-steel border border-bone/20 px-4 py-3 font-body text-sm focus:outline-none focus:border-hustlegold"
+            />
+            <p className="font-body text-xs text-bone/40 mt-1">
+              ID book, ID card, or passport. Used only to verify you before approval.
+            </p>
+          </div>
+          <div>
+            <label className="font-body text-sm text-hustlegold block mb-1">
+              A selfie of yourself
+            </label>
+            <input
+              required
+              type="file"
+              accept="image/*"
+              onChange={(e) => setSelfie(e.target.files?.[0] || null)}
+              className="w-full bg-steel border border-bone/20 px-4 py-3 font-body text-sm focus:outline-none focus:border-hustlegold"
+            />
+            <p className="font-body text-xs text-bone/40 mt-1">
+              So we can match you to your ID. Not shown publicly.
+            </p>
+          </div>
 
           {result && (
-            <p
-              className={`font-body text-sm ${
-                result.ok ? "text-hustlegold" : "text-runnerred"
-              }`}
-            >
+            <p className={`font-body text-sm ${result.ok ? "text-hustlegold" : "text-runnerred"}`}>
               {result.message}
             </p>
           )}
