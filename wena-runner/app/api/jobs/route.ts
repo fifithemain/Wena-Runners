@@ -31,7 +31,7 @@ async function who() {
 
   const { data: profile } = await client
     .from("profiles")
-    .select("id,role,is_verified")
+    .select("id,full_name,email,zone,role,is_verified")
     .eq("id", data.user.id)
     .maybeSingle();
 
