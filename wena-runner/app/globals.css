@@ -21,3 +21,36 @@
 .account-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
 .pill.verified{background:#e5f4e9;color:#185b35;border-color:#c5e4cf}
 @media(max-width:640px){.nav-user{display:none}.account-status{gap:6px}}
+
+/* Runner e-wallet */
+.wallet-page{padding-bottom:64px}
+.wallet-hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:32px;border-radius:24px;background:var(--green);color:#fff;margin:20px 0}
+.wallet-kicker{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:#dce9d8}
+.wallet-balance{font-size:clamp(2.4rem,6vw,4rem);font-weight:750;letter-spacing:-.055em;line-height:1.15;margin:10px 0}
+.wallet-hero p{color:#dce9d8;margin:0}
+.wallet-pattern{position:absolute;right:22%;top:-70px;font-size:280px;line-height:1;font-weight:900;color:#ffffff0a;pointer-events:none}
+.wallet-hero .btn{z-index:1;white-space:nowrap}
+.wallet-metrics{margin:18px 0 28px}
+.wallet-metric{display:flex;flex-direction:column;gap:10px}
+.wallet-metric strong{font-size:1.8rem;letter-spacing:-.04em}
+.wallet-metric .small{margin:0}
+.wallet-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.wallet-section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.wallet-section-head h2{margin:4px 0 0}
+.wallet-transactions{display:flex;flex-direction:column}
+.wallet-transaction{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}
+.wallet-transaction:last-child{border-bottom:0}
+.transaction-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:13px;background:#edf3e9;color:var(--green);font-weight:800}
+.transaction-icon.paid{background:#e4f4e9;color:#17643c}
+.transaction-info{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.transaction-info span,.transaction-amount span{font-size:.8rem;color:var(--muted)}
+.transaction-amount{display:flex;flex-direction:column;align-items:flex-end;gap:4px;white-space:nowrap}
+.status-pending,.status-requested,.status-processing{color:#946200!important}
+.status-paid,.status-completed{color:#17643c!important}
+.wallet-empty{text-align:center;padding:28px 12px}
+.wallet-empty strong{display:block;margin:8px 0}
+.wallet-modal-backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:18px;background:#10281f88;overflow-y:auto}
+.wallet-modal{position:relative;width:min(100%,520px);max-height:calc(100vh - 36px);overflow-y:auto;background:var(--paper)}
+.wallet-modal h2{margin:8px 0}
+.wallet-close{position:absolute;right:16px;top:16px}
+@media(max-width:760px){.wallet-grid{grid-template-columns:1fr}.wallet-hero{align-items:flex-start;flex-direction:column;padding:24px}.wallet-pattern{right:-10px;top:0;font-size:180px}.wallet-metric strong{font-size:1.45rem}}
