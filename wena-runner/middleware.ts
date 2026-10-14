@@ -4,10 +4,9 @@ import { NextResponse } from "next/server";
 const clerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
 );
-const proxyUrl = process.env.NEXT_PUBLIC_CLERK_PROXY_URL;
 
 export default clerkConfigured
-  ? clerkMiddleware(proxyUrl ? { proxyUrl } : {})
+  ? clerkMiddleware()
   : () => NextResponse.next();
 
 export const config = {
