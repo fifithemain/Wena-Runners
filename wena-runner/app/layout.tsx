@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);\n  const clerkProxyUrl = process.env.NEXT_PUBLIC_CLERK_PROXY_URL;
+  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const clerkProxyUrl = process.env.NEXT_PUBLIC_CLERK_PROXY_URL;
 
   return (
     <html lang="en-ZA">
