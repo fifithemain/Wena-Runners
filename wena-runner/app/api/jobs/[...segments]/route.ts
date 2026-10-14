@@ -99,6 +99,20 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
+    if (action === "counter") {
+      if (!["customer", "both"].includes(profile.role)) return error("Only the customer can counter an offer.", 403);
+      const counterAmount = amount(body.amount);
+      if (!counterAmount) return error("Enter a valid counteroffer amount.");
+      const { data: job } = await supabase.from("jobs").select("id,customer_id,status").eq("id", jobId).maybeSingle();
+      if (!job || job.customer_id !== profile.id || job.status !== "posted") return error("Only the owner of an open errand can counter an offer.", 403);
+      const { data: offer } = await supabase.from("job_offers").select("id,note,status").eq("id", body.offerId).eq("job_id", job.id).eq("status", "pending").maybeSingle();
+      if (!offer) return error("Offer is no longer available to counter.", 409);
+      const note = [text(offer.note, 300), `Customer counteroffer: R${counterAmount}`].filter(Boolean).join(" | ").slice(0, 500);
+      const { error: counterError } = await supabase.from("job_offers").update({ offered_amount: counterAmount, note }).eq("id", offer.id).eq("status", "pending");
+      if (counterError) return error(counterError.message, 500);
+      return NextResponse.json({ ok: true });
+    }
+
     if (action === "accept") {
       const { data: job } = await supabase
         .from("jobs")
