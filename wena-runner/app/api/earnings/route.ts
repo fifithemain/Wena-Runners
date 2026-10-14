@@ -2,6 +2,20 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getCurrentProfile } from "@/lib/current-profile";
 
+function getSupabaseAdmin() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Support both the legacy service-role JWT and the newer Supabase secret key.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "Supabase server configuration is missing. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) in the Vercel Production environment, then redeploy.",
+    );
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export async function GET() {
   try {
     const profile = await getCurrentProfile();
@@ -10,11 +24,7 @@ export async function GET() {
       return NextResponse.json({ error: "The wallet is available to Runner accounts only." }, { status: 403 });
     }
 
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) throw new Error("Supabase server configuration is missing.");
-    const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-
+    const supabase = getSupabaseAdmin();
     const [
       { data: jobs, error: jobsError },
       { data: payouts, error: payoutsError },
