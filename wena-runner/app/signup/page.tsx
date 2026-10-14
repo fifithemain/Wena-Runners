@@ -3,7 +3,7 @@ import SignupForm from "./signup-form";
 
 export default function Signup() {
   const clerkConfigured = Boolean(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   );
 
   return (
