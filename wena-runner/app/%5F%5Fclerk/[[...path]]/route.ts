@@ -35,8 +35,12 @@ async function proxy(request: Request) {
       cache: "no-store",
     });
   } catch (cause) {
+    const networkCause = cause as { cause?: { code?: string; message?: string } };
+    const detail = cause instanceof Error
+      ? `${cause.message}${networkCause.cause?.code ? ` (${networkCause.cause.code})` : ""}${networkCause.cause?.message ? `: ${networkCause.cause.message}` : ""}`
+      : "Unknown network error.";
     return NextResponse.json(
-      { error: "Clerk proxy could not reach its upstream.", detail: cause instanceof Error ? cause.message : "Unknown network error." },
+      { error: "Clerk proxy could not reach its upstream.", detail },
       { status: 502 },
     );
   }
