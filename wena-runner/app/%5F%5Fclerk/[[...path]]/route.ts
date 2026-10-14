@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 async function proxy(request: Request) {
   const proxyUrl = (process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "").replace(/\/$/, "");
-  const frontendApiUrl = (process.env.CLERK_FAPI_URL || "https://frontend-api.clerk.services").replace(/\/$/, "");
+  const frontendApiUrl = (process.env.CLERK_FAPI_URL || "https://frontend-api.clerk.dev").replace(/\/$/, "");
   const secretKey = process.env.CLERK_SECRET_KEY;
   if (!proxyUrl || !frontendApiUrl || !secretKey) {
     return NextResponse.json({ error: "Clerk proxy is not configured." }, { status: 503 });
