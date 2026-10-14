@@ -1,4 +1,5 @@
 import type {Metadata} from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from '@vercel/analytics/next';
 import "./globals.css";
 
@@ -11,8 +12,10 @@ export default function RootLayout({children}:{children:React.ReactNode}){
   return (
     <html lang="en-ZA">
       <body>
-        {children}
-        <Analytics />
+        <ClerkProvider>
+          {children}
+          <Analytics />
+        </ClerkProvider>
       </body>
     </html>
   );
