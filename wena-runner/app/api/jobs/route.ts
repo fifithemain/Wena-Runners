@@ -3,12 +3,18 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { getCurrentProfile } from "@/lib/current-profile";
 
-const db = () =>
-  createClient(
-    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-    { auth: { persistSession: false } },
-  );
+function db() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRoleKey) {
+    throw new Error(
+      "Supabase is not configured on this deployment. Add SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY in Vercel Project Settings → Environment Variables, then redeploy.",
+    );
+  }
+  return createClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 const error = (message: string, status = 400) => NextResponse.json({ error: message }, { status });
 
 export async function GET() {
@@ -37,9 +43,20 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ jobs: jobs || [], profile, offers });
+    const safeJobs = (jobs || []).map((job) =>
+      profile && (job.customer_id === profile.id || job.runner_id === profile.id)
+        ? job
+        : {
+            ...job,
+            pickup_address: "Shared after assignment",
+            dropoff_address: "Shared after assignment",
+          },
+    );
+
+    return NextResponse.json({ jobs: safeJobs, profile, offers });
   } catch (cause) {
-    return error(cause instanceof Error ? cause.message : "Could not load errands", 500);
+    const message = cause instanceof Error ? cause.message : "Could not load errands";
+    return error(message, message.startsWith("Supabase is not configured") ? 503 : 500);
   }
 }
 
@@ -111,6 +128,7 @@ export async function POST(request: Request) {
     if (insertError) return error(insertError.message, 500);
     return NextResponse.json({ jobId: job.id, collectionPin: job.collection_pin });
   } catch (cause) {
-    return error(cause instanceof Error ? cause.message : "Could not post errand", 500);
+    const message = cause instanceof Error ? cause.message : "Could not post errand";
+    return error(message, message.startsWith("Supabase is not configured") ? 503 : 500);
   }
 }
