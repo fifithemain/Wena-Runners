@@ -36,11 +36,20 @@ export async function GET() {
       const customerJobIds = jobs.filter((job) => job.customer_id === profile.id).map((job) => job.id);
       const runnerJobIds = jobs.filter((job) => job.status === "posted").map((job) => job.id);
       if (customerJobIds.length) {
-        const { data } = await supabase.from("job_offers").select("id,job_id,runner_id,offered_amount,note,status,created_at").in("job_id", customerJobIds).eq("status", "pending");
+        const { data } = await supabase
+          .from("job_offers")
+          .select("id,job_id,runner_id,offered_amount,note,status,created_at")
+          .in("job_id", customerJobIds)
+          .eq("status", "pending");
         for (const offer of data || []) (offers[offer.job_id] ||= []).push(offer);
       }
       if (["runner", "both"].includes(profile.role) && runnerJobIds.length) {
-        const { data } = await supabase.from("job_offers").select("id,job_id,runner_id,offered_amount,note,status,created_at").eq("runner_id", profile.id).eq("status", "pending").in("job_id", runnerJobIds);
+        const { data } = await supabase
+          .from("job_offers")
+          .select("id,job_id,runner_id,offered_amount,note,status,created_at")
+          .eq("runner_id", profile.id)
+          .eq("status", "pending")
+          .in("job_id", runnerJobIds);
         for (const offer of data || []) {
           const bucket = (offers[offer.job_id] ||= []);
           if (!bucket.some((item) => item.id === offer.id)) bucket.push(offer);
