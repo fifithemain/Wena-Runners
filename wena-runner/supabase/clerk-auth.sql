@@ -1,5 +1,4 @@
--- Clerk becomes the identity provider; profiles remain the internal UUID records
--- referenced by jobs, offers, messages, and payouts.
+-- Keep Supabase profile UUIDs stable for existing errands and payouts.
 alter table public.profiles
   drop constraint if exists profiles_id_fkey;
 
