@@ -12,7 +12,7 @@ async function proxy(request: Request) {
   }
 
   const incoming = new URL(request.url);
-  const path = incoming.pathname.replace(/^\/__clerk(?=\/|$)/, "") || "/";
+  const path = "/" + incoming.pathname.replace(/^\/__clerk\/?/, "").split("/").filter(Boolean).join("/");
   const upstreamUrl = new URL(`${path}${incoming.search}`, frontendApiUrl);
   const headers = new Headers(request.headers);
   headers.delete("host");
