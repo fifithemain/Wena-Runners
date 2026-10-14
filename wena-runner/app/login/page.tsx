@@ -1,1 +1,26 @@
-"use client";import Link from "next/link";import {useState} from "react";export default function Login(){const[email,S1]=useState(""),[password,S2]=useState(""),[error,S3]=useState(""),[busy,S4]=useState(false);async function go(e:React.FormEvent){e.preventDefault();S4(true);S3("");try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})}),d=await r.json();if(!r.ok)throw Error(d.error);location.href="/jobs"}catch(e){S3(e instanceof Error?e.message:"Login failed")}finally{S4(false)}}return <main className="formwrap"><Link href="/" className="brand">WENA <span>RUNNERS</span></Link><form className="panel" style={{marginTop:24}} onSubmit={go}><h1>Welcome back.</h1><p className="muted">Sign in to manage errands or Runner work.</p><div className="field"><label>Email address</label><input required type="email" value={email} onChange={e=>S1(e.target.value)}/></div><div className="field"><label>Password</label><input required type="password" value={password} onChange={e=>S2(e.target.value)}/></div>{error&&<p className="error">{error}</p>}<button className="btn" style={{width:"100%"}} disabled={busy}>{busy?"Signing in…":"Sign in"}</button><p className="small">New to WENA? <Link href="/signup">Create an account</Link></p></form></main>}
+import { SignIn } from "@clerk/nextjs";
+import Link from "next/link";
+
+export default function Login() {
+  const clerkConfigured = Boolean(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
+  );
+
+  return (
+    <main className="formwrap">
+      <Link href="/" className="brand">
+        WENA <span>RUNNERS</span>
+      </Link>
+      <section className="panel" style={{ marginTop: 24 }}>
+        <h1>Welcome back.</h1>
+        {clerkConfigured ? (
+          <SignIn routing="hash" signUpUrl="/signup" />
+        ) : (
+          <p className="error">
+            Clerk is not configured. Add the Clerk publishable and secret keys to the app environment.
+          </p>
+        )}
+      </section>
+    </main>
+  );
+}

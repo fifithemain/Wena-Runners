@@ -1,1 +1,27 @@
-"use client";import Link from "next/link";import {useState} from "react";export default function Signup(){const[name,S1]=useState(""),[email,S2]=useState(""),[phone,S3]=useState(""),[password,S4]=useState(""),[role,S5]=useState("customer"),[zone,S6]=useState(""),[error,S7]=useState(""),[done,S8]=useState(false);async function go(e:React.FormEvent){e.preventDefault();S7("");const r=await fetch("/api/auth/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fullName:name,email,phone,password,role,zone})}),d=await r.json();if(!r.ok)S7(d.error||"Signup failed");else S8(true)}return <main className="formwrap"><Link href="/" className="brand">WENA <span>RUNNERS</span></Link><form className="panel" style={{marginTop:24}} onSubmit={go}><h1>Create your account.</h1><p className="muted">Request errands, earn as a Runner, or do both.</p>{done?<p className="success">Account created. Check your email if confirmation is enabled, then <Link href="/login">sign in</Link>. Runner accounts require approval before making offers.</p>:<><div className="field"><label>Full name</label><input required value={name} onChange={e=>S1(e.target.value)}/></div><div className="field"><label>Email</label><input required type="email" value={email} onChange={e=>S2(e.target.value)}/></div><div className="field"><label>Phone</label><input required value={phone} onChange={e=>S3(e.target.value)}/></div><div className="field"><label>Password (8+ characters)</label><input required minLength={8} type="password" value={password} onChange={e=>S4(e.target.value)}/></div><div className="field"><label>Account type</label><select value={role} onChange={e=>S5(e.target.value)}><option value="customer">Request errands</option><option value="runner">Become a Runner</option><option value="both">Both</option></select></div>{role!=="customer"&&<div className="field"><label>Runner area / zone</label><input required value={zone} onChange={e=>S6(e.target.value)}/></div>}{error&&<p className="error">{error}</p>}<button className="btn" style={{width:"100%"}}>Create account</button></>}<p className="small">Already registered? <Link href="/login">Sign in</Link></p></form></main>}
+import Link from "next/link";
+import SignupForm from "./signup-form";
+
+export default function Signup() {
+  const clerkConfigured = Boolean(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
+  );
+
+  return (
+    <main className="formwrap">
+      <Link href="/" className="brand">
+        WENA <span>RUNNERS</span>
+      </Link>
+      <section className="panel" style={{ marginTop: 24 }}>
+        <h1>Create your account.</h1>
+        <p className="muted">Request errands, earn as a Runner, or do both.</p>
+        {clerkConfigured ? (
+          <SignupForm />
+        ) : (
+          <p className="error">
+            Clerk is not configured. Add the Clerk publishable and secret keys to the app environment.
+          </p>
+        )}
+      </section>
+    </main>
+  );
+}
