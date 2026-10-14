@@ -25,13 +25,21 @@ async function proxy(request: Request) {
   if (clientIp) headers.set("X-Forwarded-For", clientIp);
 
   const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
-  const upstream = await fetch(upstreamUrl, {
-    method: request.method,
-    headers,
-    body,
-    redirect: "manual",
-    cache: "no-store",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(upstreamUrl, {
+      method: request.method,
+      headers,
+      body,
+      redirect: "manual",
+      cache: "no-store",
+    });
+  } catch (cause) {
+    return NextResponse.json(
+      { error: "Clerk proxy could not reach its upstream.", detail: cause instanceof Error ? cause.message : "Unknown network error." },
+      { status: 502 },
+    );
+  }
 
   const responseHeaders = new Headers(upstream.headers);
   const location = responseHeaders.get("location");
