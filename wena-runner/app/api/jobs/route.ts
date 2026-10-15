@@ -24,7 +24,7 @@ export async function GET() {
     const { data: jobs, error: jobsError } = await supabase
       .from("jobs")
       .select(
-        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,status,receipt_required,created_at,flag_reason",
+        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,status,receipt_required,created_at,flag_reason,collection_pin",
       )
       .in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment"])
       .order("created_at", { ascending: false })
@@ -57,15 +57,21 @@ export async function GET() {
       }
     }
 
-    const safeJobs = (jobs || []).map((job) =>
-      profile && (job.customer_id === profile.id || job.runner_id === profile.id)
-        ? job
-        : {
-            ...job,
-            pickup_address: "Shared after assignment",
-            dropoff_address: "Shared after assignment",
-          },
-    );
+    const safeJobs = (jobs || []).map((job) => {
+      const isCustomer = profile?.id === job.customer_id;
+      const isParticipant = isCustomer || profile?.id === job.runner_id;
+      const { collection_pin, ...publicJob } = job;
+      return {
+        ...publicJob,
+        ...(isCustomer ? { collection_pin } : {}),
+        ...(!isParticipant
+          ? {
+              pickup_address: "Shared after assignment",
+              dropoff_address: "Shared after assignment",
+            }
+          : {}),
+      };
+    });
 
     return NextResponse.json({ jobs: safeJobs, profile, offers });
   } catch (cause) {
