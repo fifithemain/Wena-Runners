@@ -24,7 +24,7 @@ export async function GET() {
     const { data: jobs, error: jobsError } = await supabase
       .from("jobs")
       .select(
-        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,status,receipt_required,created_at,flag_reason,collection_pin",
+        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,created_at,flag_reason,collection_pin",
       )
       .in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment"])
       .order("created_at", { ascending: false })
