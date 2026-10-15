@@ -117,6 +117,37 @@ export async function POST(
       return NextResponse.json({ checkoutUrl: payment.redirectUrl });
     }
 
+
+    if (action === "pay") {
+      const { data: job } = await supabase.from("jobs").select("id,customer_id,final_budget,requested_budget,service_fee,total_charge,status,payment_status,paystack_reference").eq("id", jobId).maybeSingle();
+      if (!job || job.customer_id !== profile.id) return error("Only the customer who posted this errand can pay.", 403);
+      if (job.status !== "awaiting_payment") return error("This errand is not awaiting payment.", 409);
+      if (job.payment_status === "paid") return error("Payment is already confirmed.");
+      const total = Number(job.total_charge || (Number(job.final_budget ?? job.requested_budget) + Number(job.service_fee || 0)));
+      const payment = await createYocoCheckout(total, job.id, profile.id);
+      const { error: referenceError } = await supabase.from("jobs").update({ paystack_reference: payment.id }).eq("id", job.id).eq("status", "awaiting_payment");
+      if (referenceError) return error("Checkout was created but could not be saved. Contact WENA support before retrying.", 500);
+      return NextResponse.json({ checkoutUrl: payment.redirectUrl, amount: total });
+    }
+
+    if (action === "verify") {
+      const { data: job, error: jobError } = await supabase.from("jobs").select("id,customer_id,status,payment_status,total_charge,paystack_reference").eq("id", jobId).maybeSingle();
+      if (jobError) return error(jobError.message, 500);
+      if (!job || job.customer_id !== profile.id) return error("Errand not found for this account.", 404);
+      if (job.payment_status === "paid") return NextResponse.json({ status: "paid" });
+      if (!job.paystack_reference) return NextResponse.json({ status: "pending" });
+      const yocoKey = process.env.YOCO_SECRET_KEY;
+      if (!yocoKey) return error("Yoco server key is missing from this deployment.", 503);
+      const response = await fetch(`https://payments.yoco.com/api/checkouts/${encodeURIComponent(job.paystack_reference)}`, { headers: { Authorization: `Bearer ${yocoKey}`, Accept: "application/json" }, cache: "no-store" });
+      const checkoutResult = await response.json().catch(() => ({}));
+      if (!response.ok) return error("Yoco has not returned a verifiable checkout status yet. Retry shortly.", 502);
+      if (String(checkoutResult.status || "").toLowerCase() !== "completed") return NextResponse.json({ status: String(checkoutResult.status || "pending").toLowerCase() });
+      if (Number(checkoutResult.amount) !== Math.round(Number(job.total_charge || 0) * 100) || String(checkoutResult.currency || "ZAR").toUpperCase() !== "ZAR") return error("Verified checkout amount does not match this errand. Contact WENA support.", 409);
+      const { error: updateError } = await supabase.from("jobs").update({ payment_status: "paid", status: "assigned" }).eq("id", job.id).eq("customer_id", profile.id).eq("payment_status", "pending");
+      if (updateError) return error(updateError.message, 500);
+      return NextResponse.json({ status: "paid" });
+    }
+
     if (action === "complete") {
       const { data: job } = await supabase.from("jobs").select("runner_id,collection_pin,status,payment_status").eq("id", jobId).maybeSingle();
       if (!job || job.runner_id !== profile.id || !["assigned", "in_progress"].includes(job.status)) return error("Errand is not assigned to you.", 403);
