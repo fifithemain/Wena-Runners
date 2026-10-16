@@ -11,7 +11,7 @@ export default function Login() {
       </Link>
       <section className="panel" style={{ marginTop: 24 }}>
         <h1>Welcome back.</h1>
-        <p className="muted">Sign in to manage errands and your Runner wallet.</p>
+        <p className="muted">Sign in with an existing WENA account. If you have not registered yet, create an account first and choose whether you want to request errands, become a Runner, or do both.</p>
         {clerkConfigured ? (
           <div style={{ marginTop: 20, minHeight: 360 }}>
             <SignIn
