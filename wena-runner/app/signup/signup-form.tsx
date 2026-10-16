@@ -119,7 +119,7 @@ export default function SignupForm() {
       </div>
       <div className="field">
         <label htmlFor="role">Account type</label>
-        <select id="role" name="role" value={role} onChange={(event) => setRole(event.target.value)}>
+        <select id="role" name="role" value={role} onChange={(event) => setRole(event.target.value as ProfileDetails["role"])}>
           <option value="customer">Request errands</option>
           <option value="runner">Become a Runner</option>
           <option value="both">Both</option>
