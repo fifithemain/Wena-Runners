@@ -33,30 +33,11 @@ const db=()=>{const u=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE
   const zone=text(meta.zone,120);
   if(!fullName||!phone||(rawRole!=="customer"&&!zone))return null;
   const role=rawRole;
-  // Reuse an existing Supabase shadow identity if a previous signup attempt
-  // created the Auth user but failed before inserting the WENA profile.
-  let shadowUserId: string | null = null;
-  let createdShadowUser = false;
-  const {data:shadow,error:shadowError}=await x.auth.admin.createUser({email,email_confirm:true});
-  if(!shadowError&&shadow.user){
-    shadowUserId=shadow.user.id;
-    createdShadowUser=true;
-  } else {
-    const {data:userPage,error:listError}=await x.auth.admin.listUsers({page:1,perPage:1000});
-    if(!listError){
-      const matchingUser=(userPage.users||[]).find((candidate)=>candidate.email?.toLowerCase()===email);
-      if(matchingUser)shadowUserId=matchingUser.id;
-    }
-  }
-  if(!shadowUserId){
-    console.error("WENA signup profile creation failed: no reusable Supabase identity",shadowError?.message||"unknown Supabase Auth error");
-    const {data:retry}=await x.from("profiles").select(fields).eq("clerk_user_id",userId).maybeSingle();
-    return retry||null;
-  }
-  const {data:created,error}=await x.from("profiles").insert({id:shadowUserId,clerk_user_id:userId,full_name:fullName,email,phone,role,zone:zone||null,is_verified:false}).select(fields).single();
+  // Clerk is the sole authentication provider. The WENA profiles table has its own UUID primary key.
+  // Create the WENA profile directly; do not create a second Supabase Auth identity.
+  const {data:created,error}=await x.from("profiles").insert({clerk_user_id:userId,full_name:fullName,email,phone,role,zone:zone||null,is_verified:false}).select(fields).single();
   if(error){
     console.error("WENA signup profile insert failed:",error.message,error.code);
-    if(createdShadowUser)await x.auth.admin.deleteUser(shadowUserId);
     if(error.code==="23505"){const {data:retry}=await x.from("profiles").select(fields).eq("clerk_user_id",userId).maybeSingle();return retry||null;}
     return null;
   }
