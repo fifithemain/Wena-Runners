@@ -19,9 +19,9 @@ function CompleteAuth() {
     try {
       // Clerk session activation and the server-side session cookie can settle
       // just after the verification form completes. Retry before showing failure.
-      for (let attempt = 0; attempt < 4; attempt += 1) {
+      for (let attempt = 0; attempt < 8; attempt += 1) {
         if (attempt > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+          await new Promise((resolve) => setTimeout(resolve, 800 * attempt));
         }
         const response = await fetch("/api/auth/profile", {
           method: "POST",
@@ -35,7 +35,6 @@ function CompleteAuth() {
           return;
         }
         lastError = typeof result.error === "string" ? result.error : `Profile check failed (${response.status}).`;
-        if (response.status === 401) break;
       }
       setMessage(`We couldn't finish linking your WENA profile. Your Clerk session has been kept active. Details: ${lastError}`);
     } catch (error) {
