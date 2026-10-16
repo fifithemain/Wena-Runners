@@ -38,7 +38,7 @@ export async function GET() {
       if (!profile) return job.status === "posted";
       if (profile.role === "customer") return job.customer_id === profile.id;
       if (profile.role === "runner") return job.status === "posted" || job.runner_id === profile.id;
-      if (profile.role === "both") return true;
+      if (profile.role === "both") return job.customer_id === profile.id || job.runner_id === profile.id || job.status === "posted";
       return false;
     });
 
