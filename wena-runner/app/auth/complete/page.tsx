@@ -80,8 +80,26 @@ function CompleteAuth() {
               <circle className="account-check-stop" cx="98" cy="14" r="4" />
               <circle className="account-check-stop" cx="176" cy="50" r="4" />
               <g className="account-check-runner">
-                <circle cx="0" cy="0" r="9" />
-                <path d="M-3 1 0 4 5-4" />
+                <animateMotion
+                  dur="3.2s"
+                  path="M18 42 C56 42 58 14 98 14 S138 50 176 50 S198 28 222 28"
+                  rotate="auto"
+                  repeatCount="indefinite"
+                />
+                <path className="runner-legs" d="m-3 3-5 7-5 1m10-7 5 6-2 5" />
+                <circle className="runner-head" cx="-3" cy="-11" r="4" />
+                <path className="runner-body" d="M-7-6q4-3 8 1l4 7-5 4-8-5z" />
+                <path className="runner-arms" d="m-5-4 8 2 4-3" />
+                <rect className="runner-box" x="4" y="-9" width="15" height="13" rx="1.5" />
+                <path className="runner-box-detail" d="m4-5 7 3 8-3m-8 3v9m0-9 3-5" />
+              </g>
+              <g className="account-check-runner-static" transform="translate(18 42)">
+                <path className="runner-legs" d="m-3 3-5 7-5 1m10-7 5 6-2 5" />
+                <circle className="runner-head" cx="-3" cy="-11" r="4" />
+                <path className="runner-body" d="M-7-6q4-3 8 1l4 7-5 4-8-5z" />
+                <path className="runner-arms" d="m-5-4 8 2 4-3" />
+                <rect className="runner-box" x="4" y="-9" width="15" height="13" rx="1.5" />
+                <path className="runner-box-detail" d="m4-5 7 3 8-3m-8 3v9m0-9 3-5" />
               </g>
             </svg>
             <p className="account-check-title">Matching your verified email</p>
@@ -92,6 +110,9 @@ function CompleteAuth() {
         ) : (
           <>
             <p className="error" role="alert">{error}</p>
+            <Link className="btn account-check-signup" href="/signup">
+              Create a WENA account
+            </Link>
             <button className="btn" type="button" onClick={() => void complete()}>
               Try again
             </button>
