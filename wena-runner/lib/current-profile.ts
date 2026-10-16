@@ -49,7 +49,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 
   const { data: existing, error: emailError } = await supabase
     .from("profiles")
-    .select(fields)
+    .select("id,clerk_user_id,full_name,email,phone,role,zone,is_verified")
     .eq("email", email)
     .maybeSingle();
   if (emailError) throw new Error(`Could not match the existing profile: ${emailError.message}`);
@@ -69,7 +69,8 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       if (!linked) return null;
       return linked;
     }
-    return existing;
+    const { clerk_user_id: _clerkUserId, ...safeExisting } = existing;
+    return safeExisting;
   }
 
   // Sign-in must never create a WENA profile. Profile creation happens only
