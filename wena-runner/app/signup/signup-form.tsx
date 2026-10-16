@@ -1,54 +1,125 @@
 "use client";
 
-import { SignUp } from "@clerk/nextjs";
-import { useState } from "react";
+import { useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+
+type ProfileDetails = {
+  fullName: string;
+  phone: string;
+  role: "customer" | "runner" | "both";
+  zone: string;
+};
 
 export default function SignupForm() {
-  const [details, setDetails] = useState<{ fullName: string; phone: string; role: string; zone: string } | null>(
-    null,
-  );
-  const [role, setRole] = useState("customer");
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const router = useRouter();
+  const [role, setRole] = useState<ProfileDetails["role"]>("customer");
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  if (details) {
+  async function activateSession() {
+    if (signUp.status === "complete" && signUp.createdSessionId) {
+      await setActive({ session: signUp.createdSessionId });
+      router.replace("/auth/complete?flow=signup");
+      return true;
+    }
+    return false;
+  }
+
+  async function handleSignup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isLoaded || busy) return;
+    setBusy(true);
+    setError("");
+
+    const data = new FormData(event.currentTarget);
+    const details: ProfileDetails = {
+      fullName: String(data.get("fullName") || "").trim(),
+      phone: String(data.get("phone") || "").trim(),
+      role: String(data.get("role") || "customer") as ProfileDetails["role"],
+      zone: String(data.get("zone") || "").trim(),
+    };
+    const email = String(data.get("emailAddress") || "").trim().toLowerCase();
+    const password = String(data.get("password") || "");
+
+    try {
+      await signUp.create({
+        emailAddress: email,
+        password,
+        unsafeMetadata: details,
+      });
+      setEmailAddress(email);
+
+      if (await activateSession()) return;
+
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setNeedsVerification(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't create your account. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isLoaded || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await signUp.attemptEmailAddressVerification({ code: verificationCode.trim() });
+      if (!(await activateSession())) {
+        setError("Your email was verified, but your account is not ready yet. Please contact WENA support.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "That verification code couldn't be confirmed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (needsVerification) {
     return (
-      <SignUp
-        routing="hash"
-        signInUrl="/login"
-        unsafeMetadata={details}
-        forceRedirectUrl="/auth/complete?flow=signup"
-      />
+      <form onSubmit={handleVerification}>
+        <p className="muted">We sent a verification code to <strong>{emailAddress}</strong>. Enter it below to finish creating your WENA account.</p>
+        <div className="field">
+          <label htmlFor="verificationCode">Email verification code</label>
+          <input
+            id="verificationCode"
+            name="verificationCode"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={verificationCode}
+            onChange={(event) => setVerificationCode(event.target.value)}
+            required
+            maxLength={10}
+          />
+        </div>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn" type="submit" disabled={busy || !isLoaded}>
+          {busy ? "Verifying…" : "Verify email and create account"}
+        </button>
+      </form>
     );
   }
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        setDetails({
-          fullName: String(data.get("fullName") || "").trim(),
-          phone: String(data.get("phone") || "").trim(),
-          role: String(data.get("role") || "customer"),
-          zone: String(data.get("zone") || "").trim(),
-        });
-      }}
-    >
+    <form onSubmit={handleSignup}>
       <div className="field">
         <label htmlFor="fullName">Full name</label>
-        <input id="fullName" name="fullName" required maxLength={120} />
+        <input id="fullName" name="fullName" required maxLength={120} autoComplete="name" />
       </div>
       <div className="field">
         <label htmlFor="phone">Phone</label>
-        <input id="phone" name="phone" required maxLength={40} />
+        <input id="phone" name="phone" type="tel" required maxLength={40} autoComplete="tel" />
       </div>
       <div className="field">
         <label htmlFor="role">Account type</label>
-        <select
-          id="role"
-          name="role"
-          value={role}
-          onChange={(event) => setRole(event.target.value)}
-        >
+        <select id="role" name="role" value={role} onChange={(event) => setRole(event.target.value)}>
           <option value="customer">Request errands</option>
           <option value="runner">Become a Runner</option>
           <option value="both">Both</option>
@@ -57,12 +128,22 @@ export default function SignupForm() {
       {role !== "customer" && (
         <div className="field">
           <label htmlFor="zone">Runner area / zone</label>
-          <input id="zone" name="zone" required maxLength={120} />
+          <input id="zone" name="zone" required maxLength={120} autoComplete="address-level2" />
         </div>
       )}
-      <button className="btn" type="submit">
-        Continue to sign up
+      <div className="field">
+        <label htmlFor="emailAddress">Email address</label>
+        <input id="emailAddress" name="emailAddress" type="email" required maxLength={254} autoComplete="email" />
+      </div>
+      <div className="field">
+        <label htmlFor="password">Create password</label>
+        <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" />
+      </div>
+      {error && <p className="error" role="alert">{error}</p>}
+      <button className="btn" type="submit" disabled={busy || !isLoaded}>
+        {busy ? "Creating account…" : "Create WENA account"}
       </button>
+      <p className="muted" style={{ marginTop: 12 }}>You’ll verify your email before entering WENA Runners.</p>
     </form>
   );
 }
