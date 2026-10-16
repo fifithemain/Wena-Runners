@@ -63,69 +63,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     return existing;
   }
 
-  const unsafeMetadata = user.unsafeMetadata || {};
-  const requestedRole = metadataText(unsafeMetadata.role, 20);
-  if (!["customer", "runner", "both"].includes(requestedRole)) {
-    throw new Error("You do not have a WENA account yet. Please create an account and choose Customer, Runner, or Both.");
-  }
-  const role = requestedRole;
-  const fullName =
-    metadataText(unsafeMetadata.fullName, 120) ||
-    user.fullName ||
-    email.split("@")[0];
-  const phone =
-    metadataText(unsafeMetadata.phone, 40) ||
-    user.primaryPhoneNumber?.phoneNumber ||
-    "";
-  const zone = metadataText(unsafeMetadata.zone, 120);
-  if (!metadataText(unsafeMetadata.fullName, 120) || !phone || (role !== "customer" && !zone)) {
-    throw new Error("You do not have a complete WENA account. Please create an account and choose Customer, Runner, or Both.");
-  }
-
-  const { data: shadow, error: shadowError } = await supabase.auth.admin.createUser({
-    email,
-    email_confirm: true,
-  });
-  if (shadowError || !shadow.user) {
-    const { data: raced, error: raceLookupError } = await supabase
-      .from("profiles")
-      .select(fields)
-      .eq("clerk_user_id", userId)
-      .maybeSingle();
-    if (raceLookupError) {
-      throw new Error(`Could not recover the Clerk profile after a concurrent sign-in: ${raceLookupError.message}`);
-    }
-    if (raced) return raced;
-    throw new Error(
-      `Could not create the profile's internal database identity: ${shadowError?.message || "Unknown Supabase Auth error"}`,
-    );
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .upsert(
-      {
-        id: shadow.user.id,
-        clerk_user_id: userId,
-        full_name: fullName,
-        email,
-        phone,
-        role,
-        zone: zone || null,
-        is_verified: false,
-      },
-      { onConflict: "id" },
-    )
-    .select(fields)
-    .single();
-
-  if (profileError || !profile) {
-    const { error: cleanupError } = await supabase.auth.admin.deleteUser(shadow.user.id);
-    const cleanupMessage = cleanupError ? ` Cleanup also failed: ${cleanupError.message}` : "";
-    throw new Error(
-      `Could not create the Clerk profile: ${profileError?.message || "Unknown profile error"}.${cleanupMessage}`,
-    );
-  }
-
-  return profile;
+  // Sign-in must never create a WENA profile. Profile creation happens only
+  // through the explicit signup completion endpoint.
+  return null;
 }
