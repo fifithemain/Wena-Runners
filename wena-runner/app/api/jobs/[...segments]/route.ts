@@ -158,18 +158,19 @@ export async function POST(
     }
 
     if (action === "complete") {
-      const { data: job, error: jobError } = await supabase.from("jobs").select("runner_id,collection_pin,status,payment_status").eq("id", jobId).maybeSingle();
+      const { data: job, error: jobError } = await supabase.from("jobs").select("customer_id,runner_id,collection_pin,status,payment_status").eq("id", jobId).maybeSingle();
       if (jobError) return error(jobError.message, 500);
       if (!job) return error("Errand not found.", 404);
-      if (job.runner_id !== profile.id) return error("This errand is assigned to a different Runner account.", 403);
+      // The customer—not the Runner—confirms hand-off by entering the PIN.
+      if (job.customer_id !== profile.id) return error("Only the customer who posted this errand can confirm the hand-off PIN.", 403);
       if (job.status === "awaiting_payment" || job.payment_status !== "paid") {
         return error("The customer’s payment is not confirmed yet. Completion unlocks once payment is confirmed.", 409);
       }
       if (!["assigned", "in_progress"].includes(job.status)) {
-        return error(`This errand cannot be completed while its status is “${job.status}”. Refresh the errand board or contact WENA support if this looks wrong.`, 409);
+        return error(`This errand cannot be completed while its status is “${job.status}”.`, 409);
       }
       if (!job.collection_pin || text(body.pin, 12) !== job.collection_pin) return error("Hand-off PIN is incorrect.");
-      const { error: updateError } = await supabase.from("jobs").update({ status: "completed", completed_at: new Date().toISOString(), collection_pin: "" }).eq("id", jobId);
+      const { error: updateError } = await supabase.from("jobs").update({ status: "completed", completed_at: new Date().toISOString(), collection_pin: "" }).eq("id", jobId).eq("customer_id", profile.id);
       if (updateError) return error(updateError.message, 500);
       return NextResponse.json({ ok: true });
     }
