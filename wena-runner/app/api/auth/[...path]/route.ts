@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export { POST } from "../../[...path]/route";
 
 function retired() {
   return NextResponse.json(
@@ -8,4 +9,3 @@ function retired() {
 }
 
 export const GET = retired;
-export const POST = retired;
