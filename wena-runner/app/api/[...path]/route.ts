@@ -13,10 +13,15 @@ const db=()=>{const u=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE
   const meta=(user.unsafeMetadata||{}) as Record<string,unknown>;
   const verified=user.primaryEmailAddress?.verification?.status==="verified";
   if(verified){
-    const {data:matches}=await x.from("profiles").select(fields).eq("email",email).limit(2);
-    if(matches?.length===1&&!matches[0].clerk_user_id){
-      const {data:linked,error:linkError}=await x.from("profiles").update({clerk_user_id:userId,email}).eq("id",matches[0].id).is("clerk_user_id",null).select(fields).maybeSingle();
-      if(!linkError&&linked)return linked;
+    const {data:matches,error:matchError}=await x.from("profiles").select(fields).eq("email",email).limit(2);
+    if(matchError)console.error("WENA profile email lookup failed:",matchError.message);
+    if(matches?.length===1){
+      const match=matches[0];
+      if(!match.clerk_user_id||match.clerk_user_id===userId){
+        const {data:linked,error:linkError}=await x.from("profiles").update({clerk_user_id:userId,email}).eq("id",match.id).select(fields).maybeSingle();
+        if(!linkError&&linked)return linked;
+        if(linkError)console.error("WENA profile link failed:",linkError.message);
+      }
     }
   }
   if(!allowSignupCreation)return null;
@@ -44,11 +49,13 @@ const db=()=>{const u=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE
     }
   }
   if(!shadowUserId){
+    console.error("WENA signup profile creation failed: no reusable Supabase identity",shadowError?.message||"unknown Supabase Auth error");
     const {data:retry}=await x.from("profiles").select(fields).eq("clerk_user_id",userId).maybeSingle();
     return retry||null;
   }
   const {data:created,error}=await x.from("profiles").insert({id:shadowUserId,clerk_user_id:userId,full_name:fullName,email,phone,role,zone:zone||null,is_verified:false}).select(fields).single();
   if(error){
+    console.error("WENA signup profile insert failed:",error.message,error.code);
     if(createdShadowUser)await x.auth.admin.deleteUser(shadowUserId);
     if(error.code==="23505"){const {data:retry}=await x.from("profiles").select(fields).eq("clerk_user_id",userId).maybeSingle();return retry||null;}
     return null;
