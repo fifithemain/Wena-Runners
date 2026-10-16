@@ -107,9 +107,8 @@ export async function POST(
       if (updateError) return error(updateError.message, 500);
       if (!updatedJobs?.length) return error("This errand has already been accepted. Refresh and try again.", 409);
 
-      await supabase.from("job_offers").update({ status: "declined" }).eq("job_id", job.id).neq("id", offer.id);
-      await supabase.from("job_offers").update({ status: "accepted" }).eq("id", offer.id);
-
+      // Reserve this Runner while checkout is pending, but do not mark the offer accepted
+      // or expose the errand as active until the customer payment is verified.
       const payment = await createYocoCheckout(total, job.id, profile.id);
       // Keep the existing reference field so no schema change is required.
       const { error: referenceError } = await supabase.from("jobs").update({ paystack_reference: payment.id }).eq("id", job.id);
@@ -149,8 +148,12 @@ export async function POST(
       if (!response.ok) return error("Yoco has not returned a verifiable checkout status yet. Retry shortly.", 502);
       if (String(checkoutResult.status || "").toLowerCase() !== "completed") return NextResponse.json({ status: String(checkoutResult.status || "pending").toLowerCase() });
       if (Number(checkoutResult.amount) !== Math.round(Number(job.total_charge || 0) * 100) || String(checkoutResult.currency || "ZAR").toUpperCase() !== "ZAR") return error("Verified checkout amount does not match this errand. Contact WENA support.", 409);
-      const { error: updateError } = await supabase.from("jobs").update({ payment_status: "paid", status: "assigned" }).eq("id", job.id).eq("customer_id", profile.id).eq("payment_status", "pending");
+      const { data: updated, error: updateError } = await supabase.from("jobs").update({ payment_status: "paid", status: "assigned" }).eq("id", job.id).eq("customer_id", profile.id).eq("payment_status", "pending").select("id");
       if (updateError) return error(updateError.message, 500);
+      if (updated?.length) {
+        await supabase.from("job_offers").update({ status: "accepted" }).eq("job_id", job.id).eq("runner_id", (await supabase.from("jobs").select("runner_id").eq("id", job.id).single()).data?.runner_id);
+        await supabase.from("job_offers").update({ status: "declined" }).eq("job_id", job.id).neq("status", "accepted");
+      }
       return NextResponse.json({ status: "paid" });
     }
 
