@@ -65,7 +65,10 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 
   const unsafeMetadata = user.unsafeMetadata || {};
   const requestedRole = metadataText(unsafeMetadata.role, 20);
-  const role = ["customer", "runner", "both"].includes(requestedRole) ? requestedRole : "customer";
+  if (!["customer", "runner", "both"].includes(requestedRole)) {
+    throw new Error("You do not have a WENA account yet. Please create an account and choose Customer, Runner, or Both.");
+  }
+  const role = requestedRole;
   const fullName =
     metadataText(unsafeMetadata.fullName, 120) ||
     user.fullName ||
@@ -76,7 +79,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     "";
   const zone = metadataText(unsafeMetadata.zone, 120);
   if (!metadataText(unsafeMetadata.fullName, 120) || !phone || (role !== "customer" && !zone)) {
-    throw new Error("Complete your name, phone, and Runner area before creating your WENA profile.");
+    throw new Error("You do not have a complete WENA account. Please create an account and choose Customer, Runner, or Both.");
   }
 
   const { data: shadow, error: shadowError } = await supabase.auth.admin.createUser({
