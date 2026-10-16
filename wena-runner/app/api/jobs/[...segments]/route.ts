@@ -176,10 +176,14 @@ export async function POST(
     }
 
     if (action === "flag") {
-      const { data: job } = await supabase.from("jobs").select("runner_id,status").eq("id", jobId).maybeSingle();
+      const { data: job } = await supabase.from("jobs").select("runner_id,status,payment_status").eq("id", jobId).maybeSingle();
       if (!job || job.runner_id !== profile.id) return error("Errand not assigned to you.", 403);
-      const { error: updateError } = await supabase.from("jobs").update({ status: "disputed", is_flagged: true, flag_reason: text(body.reason, 500) || "Runner reported issue" }).eq("id", jobId);
+      if (!["assigned", "in_progress"].includes(job.status) || job.payment_status !== "paid") {
+        return error("Only a paid errand currently in progress can be flagged.", 409);
+      }
+      const { data: updated, error: updateError } = await supabase.from("jobs").update({ status: "disputed", is_flagged: true, flag_reason: text(body.reason, 500) || "Runner reported issue" }).eq("id", jobId).eq("runner_id", profile.id).in("status", ["assigned", "in_progress"]).eq("payment_status", "paid").select("id");
       if (updateError) return error(updateError.message, 500);
+      if (!updated?.length) return error("Errand status changed. Refresh and try again.", 409);
       return NextResponse.json({ ok: true });
     }
 
