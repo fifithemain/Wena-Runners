@@ -55,11 +55,20 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   if (emailError) throw new Error(`Could not match the existing profile: ${emailError.message}`);
 
   if (existing) {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ clerk_user_id: userId })
-      .eq("id", existing.id);
-    if (error) throw new Error(`Could not link the existing profile to Clerk: ${error.message}`);
+    // Never transfer an already-linked WENA profile to a different Clerk identity.
+    if (existing.clerk_user_id && existing.clerk_user_id !== userId) return null;
+    if (!existing.clerk_user_id) {
+      const { data: linked, error } = await supabase
+        .from("profiles")
+        .update({ clerk_user_id: userId })
+        .eq("id", existing.id)
+        .is("clerk_user_id", null)
+        .select(fields)
+        .maybeSingle();
+      if (error) throw new Error(`Could not link the existing profile to Clerk: ${error.message}`);
+      if (!linked) return null;
+      return linked;
+    }
     return existing;
   }
 
