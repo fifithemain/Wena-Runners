@@ -134,7 +134,13 @@ export async function POST(
       const { data: job, error: jobError } = await supabase.from("jobs").select("id,customer_id,status,payment_status,total_charge,paystack_reference").eq("id", jobId).maybeSingle();
       if (jobError) return error(jobError.message, 500);
       if (!job || job.customer_id !== profile.id) return error("Errand not found for this account.", 404);
-      if (job.payment_status === "paid") return NextResponse.json({ status: "paid" });
+      if (job.payment_status === "paid") {
+        if (job.status === "awaiting_payment") {
+          const { error: repairError } = await supabase.from("jobs").update({ status: "assigned" }).eq("id", job.id).eq("customer_id", profile.id).eq("payment_status", "paid").eq("status", "awaiting_payment");
+          if (repairError) return error(repairError.message, 500);
+        }
+        return NextResponse.json({ status: "paid" });
+      }
       if (!job.paystack_reference) return NextResponse.json({ status: "pending" });
       const yocoKey = process.env.YOCO_SECRET_KEY;
       if (!yocoKey) return error("Yoco server key is missing from this deployment.", 503);
@@ -149,10 +155,17 @@ export async function POST(
     }
 
     if (action === "complete") {
-      const { data: job } = await supabase.from("jobs").select("runner_id,collection_pin,status,payment_status").eq("id", jobId).maybeSingle();
-      if (!job || job.runner_id !== profile.id || !["assigned", "in_progress"].includes(job.status)) return error("Errand is not assigned to you.", 403);
+      const { data: job, error: jobError } = await supabase.from("jobs").select("runner_id,collection_pin,status,payment_status").eq("id", jobId).maybeSingle();
+      if (jobError) return error(jobError.message, 500);
+      if (!job) return error("Errand not found.", 404);
+      if (job.runner_id !== profile.id) return error("This errand is assigned to a different Runner account.", 403);
+      if (job.status === "awaiting_payment" || job.payment_status !== "paid") {
+        return error("The customer’s payment is not confirmed yet. Completion unlocks once payment is confirmed.", 409);
+      }
+      if (!["assigned", "in_progress"].includes(job.status)) {
+        return error(`This errand cannot be completed while its status is “${job.status}”. Refresh the errand board or contact WENA support if this looks wrong.`, 409);
+      }
       if (!job.collection_pin || text(body.pin, 12) !== job.collection_pin) return error("Hand-off PIN is incorrect.");
-      if (job.payment_status !== "paid") return error("Payment is not confirmed yet.", 409);
       const { error: updateError } = await supabase.from("jobs").update({ status: "completed", completed_at: new Date().toISOString(), collection_pin: "" }).eq("id", jobId);
       if (updateError) return error(updateError.message, 500);
       return NextResponse.json({ ok: true });
