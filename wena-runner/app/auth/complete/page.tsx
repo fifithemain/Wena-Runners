@@ -1,20 +1,28 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 function CompleteAuth() {
-  const { signOut } = useClerk();
   const router = useRouter();
   const search = useSearchParams();
   const [message, setMessage] = useState("Checking your WENA account…");
+  const [checking, setChecking] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const flow = search.get("flow") === "signup" ? "signup" : "login";
-      try {
+  const complete = useCallback(async () => {
+    if (checking) return;
+    setChecking(true);
+    setMessage("Checking your WENA account…");
+    const flow = search.get("flow") === "signup" ? "signup" : "login";
+    let lastError = "No WENA profile was returned.";
+
+    try {
+      // Clerk session activation and the server-side session cookie can settle
+      // just after the verification form completes. Retry before showing failure.
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        if (attempt > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+        }
         const response = await fetch("/api/auth/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -22,27 +30,40 @@ function CompleteAuth() {
           cache: "no-store",
         });
         const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.profile) {
-          await signOut();
-          if (active) {
-            setMessage("No WENA profile was found. Please create your WENA account first.");
-            router.replace("/signup?notice=profile-required");
-          }
+        if (response.ok && result.profile) {
+          router.replace("/jobs");
           return;
         }
-        if (active) router.replace("/jobs");
-      } catch {
-        await signOut();
-        if (active) {
-          setMessage("We couldn't verify your WENA profile. Please create an account or try again.");
-          router.replace("/signup?notice=profile-required");
-        }
+        lastError = typeof result.error === "string" ? result.error : `Profile check failed (${response.status}).`;
+        if (response.status === 401) break;
       }
-    })();
-    return () => { active = false; };
-  }, [router, search, signOut]);
+      setMessage(`We couldn't finish linking your WENA profile. Your Clerk session has been kept active. Details: ${lastError}`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "We couldn't verify your WENA profile. Please try again.");
+    } finally {
+      setChecking(false);
+    }
+  }, [checking, router, search]);
 
-  return <main className="formwrap"><section className="panel"><h1>Checking your account</h1><p className="muted">{message}</p></section></main>;
+  useEffect(() => {
+    void complete();
+    // Run once on page entry; retry button calls the same action if needed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <main className="formwrap">
+      <section className="panel">
+        <h1>Checking your account</h1>
+        <p className="muted">{message}</p>
+        {message !== "Checking your WENA account…" && (
+          <button className="btn" type="button" onClick={() => void complete()} disabled={checking}>
+            {checking ? "Checking…" : "Try again"}
+          </button>
+        )}
+      </section>
+    </main>
+  );
 }
 
 export default function AuthCompletePage() {
