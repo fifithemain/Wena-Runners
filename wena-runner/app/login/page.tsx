@@ -17,8 +17,8 @@ export default function Login() {
             <SignIn
               routing="hash"
               signUpUrl="/signup"
-              fallbackRedirectUrl="/"
-              signUpFallbackRedirectUrl="/"
+              fallbackRedirectUrl="/auth/complete?flow=login"
+              signUpFallbackRedirectUrl="/auth/complete?flow=signup"
               appearance={{
                 elements: {
                   rootBox: { width: "100%" },
