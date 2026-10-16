@@ -31,10 +31,21 @@ export async function GET() {
       .limit(100);
     if (jobsError) return error(jobsError.message, 500);
 
+    // Keep each account type in its own workspace:
+    // customers see only their own errands; Runners see public posted work and
+    // errands assigned to them; "both" accounts can use both experiences.
+    const visibleJobs = (jobs || []).filter((job) => {
+      if (!profile) return job.status === "posted";
+      if (profile.role === "customer") return job.customer_id === profile.id;
+      if (profile.role === "runner") return job.status === "posted" || job.runner_id === profile.id;
+      if (profile.role === "both") return true;
+      return false;
+    });
+
     const offers: Record<string, any[]> = {};
-    if (profile && jobs?.length) {
-      const customerJobIds = jobs.filter((job) => job.customer_id === profile.id).map((job) => job.id);
-      const runnerJobIds = jobs.filter((job) => job.status === "posted").map((job) => job.id);
+    if (profile && visibleJobs.length) {
+      const customerJobIds = visibleJobs.filter((job) => job.customer_id === profile.id).map((job) => job.id);
+      const runnerJobIds = visibleJobs.filter((job) => job.status === "posted" && job.customer_id !== profile.id).map((job) => job.id);
       if (customerJobIds.length) {
         const { data } = await supabase
           .from("job_offers")
@@ -57,7 +68,7 @@ export async function GET() {
       }
     }
 
-    const safeJobs = (jobs || []).map((job) => {
+    const safeJobs = visibleJobs.map((job) => {
       const isCustomer = profile?.id === job.customer_id;
       const isParticipant = isCustomer || profile?.id === job.runner_id;
       const { collection_pin, ...publicJob } = job;
