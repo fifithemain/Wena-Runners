@@ -126,13 +126,20 @@ export async function POST(request: Request) {
     const supabase = db();
     let receiptPath: string | null = null;
     if (file instanceof File) {
-      if (file.size > 8 * 1024 * 1024) return error("Receipt must be under 8 MB.");
-      const extension = (file.name.split(".").pop() || "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
-      const path = `${profile.id}/${crypto.randomUUID()}.${extension}`;
+      if (file.size <= 0 || file.size > 8 * 1024 * 1024) return error("Receipt must be between 1 byte and 8 MB.");
+      const allowedTypes: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "application/pdf": "pdf",
+      };
+      const safeExtension = allowedTypes[file.type];
+      if (!safeExtension) return error("Receipt must be a JPEG, PNG, WebP image, or PDF.");
+      const path = `${profile.id}/${crypto.randomUUID()}.${safeExtension}`;
       const { error: uploadError } = await supabase.storage
         .from("receipts")
         .upload(path, await file.arrayBuffer(), {
-          contentType: file.type || "application/octet-stream",
+          contentType: file.type,
           upsert: false,
         });
       if (uploadError) return error(`Receipt upload failed: ${uploadError.message}`, 500);
