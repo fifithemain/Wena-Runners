@@ -15,6 +15,7 @@ export default function SignupForm() {
         routing="hash"
         signInUrl="/login"
         unsafeMetadata={details}
+        forceRedirectUrl="/auth/complete?flow=signup"
       />
     );
   }
