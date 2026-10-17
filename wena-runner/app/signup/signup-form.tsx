@@ -21,11 +21,29 @@ export default function SignupForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function activateSession() {
-    if (signUp.status === "complete" && signUp.createdSessionId) {
-      await setActive({ session: signUp.createdSessionId });
+  async function activateSession(attempt = signUp) {
+    if (attempt.status === "complete" && attempt.createdSessionId) {
+      await setActive({ session: attempt.createdSessionId });
       router.replace("/auth/complete?flow=signup");
       return true;
+    }
+
+    const missing = attempt.missingFields.map((field) =>
+      field.replaceAll("_", " "),
+    );
+    const unverified = attempt.unverifiedFields.map((field) =>
+      field.replaceAll("_", " "),
+    );
+    if (missing.length || unverified.length) {
+      const requirements = [
+        missing.length ? `Still required: ${missing.join(", ")}.` : "",
+        unverified.length ? `Still needs verification: ${unverified.join(", ")}.` : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      setError(`Your email is verified, but Clerk needs more information. ${requirements}`);
+    } else {
+      setError("Your email is verified, but Clerk did not create an active session. Please try signing in.");
     }
     return false;
   }
@@ -47,14 +65,17 @@ export default function SignupForm() {
     const password = String(data.get("password") || "");
 
     try {
-      await signUp.create({
+      const nameParts = details.fullName.split(/\s+/);
+      const attempt = await signUp.create({
         emailAddress: email,
         password,
+        firstName: nameParts[0],
+        lastName: nameParts.slice(1).join(" ") || undefined,
         unsafeMetadata: details,
       });
       setEmailAddress(email);
 
-      if (await activateSession()) return;
+      if (await activateSession(attempt)) return;
 
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setNeedsVerification(true);
@@ -71,10 +92,10 @@ export default function SignupForm() {
     setBusy(true);
     setError("");
     try {
-      await signUp.attemptEmailAddressVerification({ code: verificationCode.trim() });
-      if (!(await activateSession())) {
-        setError("Your email was verified, but your account is not ready yet. Please contact WENA support.");
-      }
+      const attempt = await signUp.attemptEmailAddressVerification({
+        code: verificationCode.trim(),
+      });
+      await activateSession(attempt);
     } catch (err) {
       setError(err instanceof Error ? err.message : "That verification code couldn't be confirmed. Please try again.");
     } finally {
