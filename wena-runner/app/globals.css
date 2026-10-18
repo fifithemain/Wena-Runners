@@ -73,5 +73,6 @@
 .account-check-status .muted{margin:4px 0 0;max-width:38ch}
 .account-check-back{display:inline-flex;margin:14px 0 0;padding:8px;color:var(--green);font-weight:700;text-underline-offset:3px}
 .account-check-signup{margin:5px 5px 5px 0}
+.job-chat{grid-column:1/-1}
 @keyframes account-route-travel{to{stroke-dashoffset:-28}}
 @media(prefers-reduced-motion:reduce){.account-check-runner{display:none}.account-check-runner-static{display:block}}

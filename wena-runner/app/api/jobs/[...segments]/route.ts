@@ -32,9 +32,9 @@ async function createYocoCheckout(total: number, jobId: string, customerId: stri
     body: JSON.stringify({
       amount: Math.round(total * 100),
       currency: "ZAR",
-      successRedirectUrl: `${site}/payment?status=success&job=${encodeURIComponent(jobId)}`,
-      failureRedirectUrl: `${site}/payment?status=failed&job=${encodeURIComponent(jobId)}`,
-      cancelRedirectUrl: `${site}/payment?status=cancelled&job=${encodeURIComponent(jobId)}`,
+      successUrl: `${site}/payment?status=success&job=${encodeURIComponent(jobId)}`,
+      failureUrl: `${site}/payment?status=failed&job=${encodeURIComponent(jobId)}`,
+      cancelUrl: `${site}/payment?status=cancelled&job=${encodeURIComponent(jobId)}`,
       description: `WENA Runners errand ${jobId}`,
       metadata: { jobId, customerId, purpose: "errand_payment" },
     }),
