@@ -12,106 +12,36 @@ const categories = [
 
 export default function Home() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-
-  return (
-    <main>
-      <nav className="shell nav market-nav">
-        <Link href="/" className="brand">wena <span>runners</span></Link>
-        <div className="navlinks">
-          <Link href="/jobs">Explore errands</Link>
-          <a href="#how">How it works</a>
-          <Link href="/signup">Become a Runner</Link>
-          <a href="#help">Help</a>
-          <AuthControls clerkConfigured={clerkConfigured} />
-        </div>
-      </nav>
-
-      <section className="shell hero market-hero">
-        <div>
-          <span className="eyebrow">Local people. Real help.</span>
-          <h1>Your to-do list.<br /><span>Handled.</span></h1>
-          <p>From quick pickups to everyday errands, find a trusted local Runner and get your time back.</p>
-          <form className="market-search" action="/jobs" method="get">
-            <input name="q" aria-label="What do you need help with?" placeholder="⌕  What do you need help with?" />
-            <select name="area" aria-label="Your area" defaultValue="">
-              <option value="">⌖ Your area</option>
-              <option value="Cape Town">Cape Town</option>
-              <option value="Johannesburg">Johannesburg</option>
-              <option value="Durban">Durban</option>
-              <option value="Gqeberha">Gqeberha</option>
-              <option value="Other">Other area</option>
-            </select>
-            <button className="btn" type="submit">Find a Runner <span aria-hidden="true">→</span></button>
-          </form>
-          <div className="market-trust">
-            <span>🤝 Agree on your price</span>
-            <span>🛡 Secure account</span>
-            <span>♧ Local people, real help</span>
-          </div>
-        </div>
-        <div className="hero-card">
-          <span className="eyebrow">Across South Africa</span>
-          <div>
-            <div className="big">More time</div>
-            <div className="big">for what matters.</div>
-          </div>
-          <p>Customers and verified Runners agree on a fair price before the errand gets underway.</p>
-          <div style={{ position: "relative", zIndex: 1, fontSize: 58 }} aria-hidden="true">🛍️ 📦</div>
-        </div>
-      </section>
-
-      <section className="section market-categories">
-        <div className="shell">
-          <h2>What can we help you with?</h2>
-          <p className="muted">Choose a category or tell us what you need. There's a Runner for just about anything.</p>
-          <div className="cards">
-            {categories.map((category) => (
-              <article className="card" key={category.title}>
-                <div className="category-emoji" aria-hidden="true">{category.icon}</div>
-                <h3>{category.title}</h3>
-                <p>{category.description}</p>
-                <Link href="/jobs">Explore errands <span aria-hidden="true">→</span></Link>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="shell section" id="how">
-        <h2>How Wena Runners works</h2>
-        <p className="muted">Get things done in just a few simple steps.</p>
-        <div className="market-steps">
-          <article className="market-step">
-            <span className="step-number">1</span>
-            <div><h3>Post your errand</h3><p className="muted">Tell us what you need, where and when. Add details to help Runners make an offer.</p></div>
-          </article>
-          <article className="market-step">
-            <span className="step-number">2</span>
-            <div><h3>Agree on a price</h3><p className="muted">Get offers from verified Runners and choose the one that works for you.</p></div>
-          </article>
-          <article className="market-step">
-            <span className="step-number">3</span>
-            <div><h3>Your Runner gets it done</h3><p className="muted">Follow the errand in your account and keep the hand-off PIN private until completion.</p></div>
-          </article>
-        </div>
-      </section>
-
-      <section className="shell section" id="help">
-        <div className="card runner-cta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
-          <div>
-            <span className="eyebrow">For Runners</span>
-            <h2 style={{ marginTop: 12 }}>Earn on your own schedule</h2>
-            <p className="muted">Make money by helping people in your area with everyday errands.</p>
-          </div>
-          <Link className="btn" href="/signup">Become a Runner <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
-
-      <footer className="shell footer market-footer">
-        <strong>WENA Runners</strong>
-        <span>Local errands. Fair deals. Real people.</span>
-        <span>© {new Date().getFullYear()} WENA</span>
-      </footer>
-    </main>
-  );
+  return <main className="reference-home">
+    <nav className="shell nav market-nav">
+      <Link href="/" className="brand"><span className="brand-mark">✳</span> wena<span>runners</span></Link>
+      <div className="navlinks"><Link href="/jobs">Explore errands</Link><a href="#how">How it works</a><Link href="/signup">Become a Runner</Link><a href="#help">Help</a><AuthControls clerkConfigured={clerkConfigured}/></div>
+    </nav>
+    <section className="reference-hero">
+      <div className="reference-hero-copy">
+        <p className="reference-kicker">LOCAL PEOPLE. REAL HELP.</p>
+        <h1>Your to-do list.<br/><span>Handled.</span></h1>
+        <p className="reference-intro">From quick pickups to everyday errands, find a trusted local Runner and get your time back.</p>
+        <form className="reference-search" action="/jobs" method="get">
+          <label className="search-what"><span>⌕</span><input name="q" aria-label="What do you need help with?" placeholder="What do you need help with?"/></label>
+          <label className="search-area"><span>⌖</span><select name="area" aria-label="Your area" defaultValue=""><option value="">Your area</option><option>Cape Town</option><option>Johannesburg</option><option>Durban</option><option>Gqeberha</option><option>Other</option></select></label>
+          <button className="btn" type="submit">Find a Runner <span>→</span></button>
+        </form>
+        <div className="reference-trust"><div><b>♧</b><span><strong>Agree on your price</strong><small>You're in control</small></span></div><div><b>♙</b><span><strong>Secure account</strong><small>Safe & verified users</small></span></div><div><b>♧</b><span><strong>Local people, real help</strong><small>In your community</small></span></div></div>
+      </div>
+      <div className="reference-hero-photo" role="img" aria-label="Runner carrying groceries and delivery packages">
+        <div className="photo-note">More time<br/>for what matters.</div><div className="photo-location">📍 Local Runners<br/><small>across South Africa</small></div>
+      </div>
+    </section>
+    <section className="reference-categories">
+      <div className="shell"><div className="reference-section-heading"><div><h2>What can we help you with?</h2><p>Choose a category or tell us what you need. There's a Runner for just about anything.</p></div><Link href="/jobs">View all errands&nbsp; →</Link></div>
+        <div className="reference-category-grid">{categories.map((category,i)=><Link className="reference-category" href="/jobs" key={category.title}><div className={"reference-category-art art-"+i}><span>{category.icon}</span></div><strong>{category.title}</strong><small>{category.description}</small><i>→</i></Link>)}</div>
+      </div>
+    </section>
+    <section className="shell reference-how" id="how"><div className="reference-section-heading"><div><h2>How Wena Runners works</h2><p>Get things done in just a few simple steps.</p></div></div>
+      <div className="reference-steps"><article><b className="step-dot">1</b><span className="step-icon">▤</span><div><strong>Post your errand</strong><p>Tell us what you need, where and when. Add photos if it helps.</p></div></article><article><b className="step-dot coral">2</b><span className="step-icon">▢</span><div><strong>Agree on a price</strong><p>Get offers from verified Runners and choose the one that works for you.</p></div></article><article><b className="step-dot">3</b><span className="step-icon runner-icon">↗</span><div><strong>Your Runner gets it done</strong><p>Sit back and relax while your Runner completes your errand.</p></div></article></div>
+      <aside className="reference-runner-cta" id="help"><div><h3>Earn on your<br/>own schedule</h3><p>Make money by helping people in your area with everyday errands.</p><Link className="btn" href="/signup">Become a Runner&nbsp; →</Link></div><div className="cta-illustration">🛍️</div></aside>
+    </section>
+    <footer className="shell footer market-footer"><strong>✳ wena runners</strong><span>Local errands. Fair deals. Real people.</span><span>© {new Date().getFullYear()} WENA</span></footer>
+  </main>;
 }
