@@ -30,7 +30,6 @@ export default function Signup() {
             Clerk is not configured. Add the Clerk publishable and secret keys to the app environment.
           </p>
         )}
-        <p className="muted" style={{ marginTop: 18 }}><Link href="/demo">Explore the interactive demo</Link></p>
       </section>
     </main>
   );

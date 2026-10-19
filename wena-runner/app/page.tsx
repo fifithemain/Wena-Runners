@@ -32,7 +32,6 @@ export default function Home() {
           <a href="#errands">Explore errands</a>
           <a href="#how">How it works</a>
           <Link href="/signup">Become a Runner</Link>
-          <Link href="/demo" className="btn ghost">Explore demo</Link>
           <AuthControls clerkConfigured={clerkConfigured} />
         </div>
       </nav>

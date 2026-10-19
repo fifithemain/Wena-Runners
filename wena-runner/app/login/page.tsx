@@ -44,7 +44,6 @@ export default function Login() {
         <p className="muted" style={{ marginTop: 20 }}>
           New to WENA Runners? <Link href="/signup">Create an account</Link>
         </p>
-        <p className="muted"><Link href="/demo">Explore the interactive demo</Link></p>
       </section>
     </main>
   );

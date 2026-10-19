@@ -1,6 +1,6 @@
 "use client";
-import Link from "next/link";
 import {useCallback,useEffect,useState} from "react";
+import WorkspaceShell from "../workspace-shell";
 
 type WalletData={totalEarned:number;totalPaid:number;balance:number;availableBalance?:number;payouts:any[];pendingPayouts?:number;requests?:any[]};
 const money=(value:number)=>new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR",maximumFractionDigits:2}).format(Number(value||0));
@@ -9,9 +9,8 @@ export default function Earnings(){
  const load=useCallback(async()=>{try{const r=await fetch("/api/earnings",{cache:"no-store"}),x=await r.json();if(!r.ok)throw Error(x.error||"Could not load wallet");setData(x);setError("")}catch(x){setError(x instanceof Error?x.message:"Could not load wallet")}finally{setLoading(false)}},[]);
  useEffect(()=>{load()},[load]);
  async function requestPayout(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");setSuccess("");try{const r=await fetch("/api/earnings/request-payout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:Number(amount),method,accountDetails:account})}),x=await r.json();if(!r.ok)throw Error(x.error||"Payout request failed");setSuccess("Your payout request was submitted. Processing can take 3–7 business days.");setShowRequest(false);setAmount("");setAccount("");await load()}catch(x){setError(x instanceof Error?x.message:"Payout request failed")}finally{setBusy(false)}}
- return <main>
-  <nav className="shell nav"><Link href="/" className="brand" aria-label="WENA Runners home"><span className="brand-symbol" aria-hidden="true">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link><div className="navlinks"><Link href="/jobs">Marketplace</Link><Link href="/earnings" aria-current="page">Wallet</Link><Link href="/jobs">Back to errands</Link></div></nav>
-  <section className="shell wallet-page">
+ return <WorkspaceShell active="earnings" role="runner" signedIn>
+  <section className="workspace-page wallet-page">
    <header className="pagehead"><h1>Your money, at a glance.</h1><p className="muted">Track completed work, follow payout requests, and see what’s ready to withdraw.</p></header>
    {error&&<p className="error" role="alert">{error}</p>}{success&&<p className="success" role="status">{success}</p>}
    {loading?<div className="panel">Loading your wallet…</div>:data&&<>
@@ -22,5 +21,5 @@ export default function Earnings(){
     {showRequest&&<div className="wallet-modal-backdrop"><form className="panel wallet-modal" onSubmit={requestPayout}><button type="button" className="icon-button wallet-close" onClick={()=>setShowRequest(false)} aria-label="Close">×</button><h2>Request a payout</h2><p className="muted">Allow 3–7 business days for processing.</p><div className="field"><label>Amount (ZAR)</label><input required type="number" min="1" max={Math.max(0,data.availableBalance ?? (data.balance-(data.pendingPayouts||0)))} step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="e.g. 250.00"/></div><div className="field"><label>Payout method</label><select value={method} onChange={e=>setMethod(e.target.value)}><option value="bank_transfer">Bank transfer</option><option value="mobile_money">Mobile money</option></select></div><div className="field"><label>Payment details</label><textarea required maxLength={500} value={account} onChange={e=>setAccount(e.target.value)} placeholder="Enter the bank account holder and account details, or your mobile money details."/></div><p className="small">Your payment details are used only to process this payout request. Double-check them before submitting.</p><div className="form-actions"><button className="btn" disabled={busy}>{busy?"Submitting…":"Submit request"}</button><button type="button" className="btn ghost" onClick={()=>setShowRequest(false)}>Cancel</button></div></form></div>}
    </>}
   </section>
- </main>
+ </WorkspaceShell>
 }
