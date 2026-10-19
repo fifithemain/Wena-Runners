@@ -549,6 +549,32 @@ img, svg { max-width: 100%; }
 .demo-details div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #edf2ef; }
 .demo-details dt { color: var(--muted); font-size: 10px; }
 .demo-details dd { margin: 0; font-size: 10px; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.demo-history { grid-column: 1/-1; min-width: 0; padding: 20px; }
+.demo-history-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.demo-history-heading h2 { margin: 0; font: 700 19px var(--display); letter-spacing: -.045em; }
+.demo-history-heading p { margin: 5px 0 0; font-size: 11px; }
+.demo-history-heading > span { flex: 0 0 auto; padding: 5px 9px; border-radius: 20px; background: #eff6f1; color: var(--ink-soft); font-size: 9px; font-weight: 700; }
+.demo-history-filters { display: flex; gap: 6px; overflow-x: auto; margin: 16px 0 8px; padding-bottom: 5px; }
+.demo-history-filters button { min-height: 32px; flex: 0 0 auto; padding: 6px 11px; border: 1px solid var(--line); border-radius: 18px; background: #fff; color: var(--ink-soft); font-size: 10px; font-weight: 700; }
+.demo-history-filters button:hover { border-color: #9fcdb1; }
+.demo-history-filters button.active { border-color: var(--green); background: var(--green); color: #fff; }
+.demo-history-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 12px 0; border-top: 1px solid #edf2ef; }
+.demo-history-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: #edf2ef; color: var(--muted); font-size: 15px; font-weight: 800; }
+.demo-history-icon.paid { background: #e4f4e9; color: #155c38; }
+.demo-history-icon.cancelled { background: #fff0eb; color: #943d2d; }
+.demo-history-icon.refunded { background: #eaf1fb; color: #315b8b; }
+.demo-history-icon.pending { background: #fff5de; color: #825600; }
+.demo-history-info, .demo-history-result { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.demo-history-info strong, .demo-history-result > strong { font-size: 11px; }
+.demo-history-info > span, .demo-history-info > small, .demo-history-result > small { color: var(--muted); font-size: 9px; }
+.demo-history-result { align-items: flex-end; white-space: nowrap; }
+.demo-history-status { font-size: 9px; font-weight: 800; }
+.demo-history-status.paid { color: #155c38; }
+.demo-history-status.cancelled { color: #943d2d; }
+.demo-history-status.refunded { color: #315b8b; }
+.demo-history-status.pending { color: #825600; }
+.demo-history-empty { margin: 0; padding: 24px 8px; color: var(--muted); font-size: 11px; text-align: center; }
+.demo-history-disclaimer { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid #edf2ef; color: var(--muted); font-size: 9px; line-height: 1.5; }
 .demo-account-options .muted { margin: 5px 0 12px; font-size: 11px; }
 .demo-account-options > button { width: 100%; display: flex; align-items: center; gap: 11px; padding: 13px 2px; border: 0; border-top: 1px solid #edf2ef; background: transparent; text-align: left; }
 .demo-account-options > button > span:first-child { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: #eaf5ed; color: var(--green-dark); }
@@ -755,6 +781,12 @@ img, svg { max-width: 100%; }
   .demo-thread-head .btn { white-space: nowrap; }
   .demo-message-list { min-height: 225px; padding: 12px; }
   .demo-account-grid { gap: 11px; }
+  .demo-history { padding: 16px; }
+  .demo-history-row { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; }
+  .demo-history-icon { width: 30px; height: 30px; }
+  .demo-history-info strong, .demo-history-result > strong { font-size: 10px; }
+  .demo-history-info > span, .demo-history-info > small, .demo-history-result > small { font-size: 8px; }
+  .demo-history-status { font-size: 8px; }
   .demo-wallet .wallet-hero { padding: 19px; }
   .demo-wallet .wallet-hero .btn { width: 100%; }
   .demo-wallet .wallet-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }

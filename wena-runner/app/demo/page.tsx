@@ -6,11 +6,21 @@ import { type FormEvent, useEffect, useState } from "react";
 type DemoSection = "dashboard" | "chat" | "account" | "wallet" | "payment" | "sign-in" | "sign-up";
 type DemoRole = "customer" | "runner";
 type DemoMessage = { id: number; role: DemoRole; text: string; time: string };
+type HistoryFilter = "all" | "paid" | "cancelled" | "refunded" | "pending";
+type HistoryEntry = { id: number; title: string; category: string; date: string; errandStatus: string; paymentStatus: Exclude<HistoryFilter, "all">; amount: string; detail: string };
 
 const initialMessages: DemoMessage[] = [
   { id: 1, role: "runner", text: "Hi Dani! I’ve picked up the grocery order. Heading your way now.", time: "10:42" },
   { id: 2, role: "customer", text: "Thanks, Lwazi. Please message when you’re around the corner.", time: "10:44" },
   { id: 3, role: "runner", text: "Almost there. I’ll ask you for the hand-off PIN when I arrive.", time: "10:51" },
+];
+
+const demoHistory: HistoryEntry[] = [
+  { id: 1, title: "Weekly grocery top-up", category: "Groceries", date: "19 Oct 2026", errandStatus: "Completed", paymentStatus: "paid", amount: "R194.25", detail: "Paid successfully · Lwazi Khumalo" },
+  { id: 2, title: "Collect a parcel from the post office", category: "Pick-up & delivery", date: "18 Oct 2026", errandStatus: "Cancelled", paymentStatus: "cancelled", amount: "R120.00", detail: "Cancelled before payment · No charge" },
+  { id: 3, title: "Help moving a bookshelf", category: "Home help", date: "16 Oct 2026", errandStatus: "Cancelled", paymentStatus: "refunded", amount: "R230.00", detail: "Errand cancelled · R230.00 refunded" },
+  { id: 4, title: "Drop off keys in Gardens", category: "Keys & documents", date: "14 Oct 2026", errandStatus: "Completed", paymentStatus: "paid", amount: "R98.50", detail: "Paid successfully · Amahle Petersen" },
+  { id: 5, title: "Pick up a birthday cake", category: "Pick-up & delivery", date: "12 Oct 2026", errandStatus: "Awaiting payment", paymentStatus: "pending", amount: "R160.00", detail: "Payment not completed" },
 ];
 
 const navigation: { id: DemoSection; label: string; icon: string }[] = [
@@ -30,9 +40,11 @@ export default function DemoPage() {
   const [postedErrand, setPostedErrand] = useState("");
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [payoutRequested, setPayoutRequested] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>("all");
   const [notice, setNotice] = useState("");
   const name = role === "customer" ? "Dani Mokoena" : "Lwazi Khumalo";
   const firstName = name.split(" ")[0];
+  const visibleHistory = historyFilter === "all" ? demoHistory : demoHistory.filter((entry) => entry.paymentStatus === historyFilter);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -211,6 +223,27 @@ export default function DemoPage() {
                 <button className="btn ghost" onClick={() => demoAction("Profile editing is a visual-only demo.")}>Edit profile</button>
               </section>
               <section className="panel demo-account-options"><h2>Account settings</h2><p className="muted">Your details and preferences in one place.</p><button onClick={() => demoAction("Email preferences opened in this demo.")}><span>✉</span><span><strong>Email & notifications</strong><small>Choose what WENA updates you about</small></span><b>→</b></button><button onClick={() => demoAction("Security settings opened in this demo.")}><span>◇</span><span><strong>Sign-in & security</strong><small>Password and account protection</small></span><b>→</b></button><button onClick={() => setRole(role === "customer" ? "runner" : "customer")}><span>↔</span><span><strong>{role === "customer" ? "Preview Runner account" : "Preview Customer account"}</strong><small>Switch between sample account types</small></span><b>→</b></button></section>
+              <section className="panel demo-history">
+                <div className="demo-history-heading"><div><h2>Errand & payment history</h2><p className="muted">A record of completed errands, cancellations, and payment outcomes.</p></div><span>{demoHistory.length} errands</span></div>
+                <div className="demo-history-filters" aria-label="Filter history by payment status">
+                  {(["all", "paid", "cancelled", "refunded", "pending"] as HistoryFilter[]).map((filter) => (
+                    <button type="button" key={filter} className={historyFilter === filter ? "active" : ""} aria-pressed={historyFilter === filter} onClick={() => setHistoryFilter(filter)}>
+                      {filter === "all" ? "All activity" : filter === "paid" ? "Paid" : filter === "cancelled" ? "Cancelled" : filter === "refunded" ? "Refunded" : "Pending"}
+                    </button>
+                  ))}
+                </div>
+                <div className="demo-history-list">
+                  {visibleHistory.map((entry) => (
+                    <article className="demo-history-row" key={entry.id}>
+                      <span className={`demo-history-icon ${entry.paymentStatus}`} aria-hidden="true">{entry.paymentStatus === "paid" ? "✓" : entry.paymentStatus === "refunded" ? "↶" : entry.paymentStatus === "pending" ? "…" : "×"}</span>
+                      <div className="demo-history-info"><strong>{entry.title}</strong><span>{entry.category} · {entry.date}</span><small>{entry.detail}</small></div>
+                      <div className="demo-history-result"><strong>{entry.amount}</strong><span className={`demo-history-status ${entry.paymentStatus}`}>{paymentStatusLabel(entry.paymentStatus)}</span><small>Errand {entry.errandStatus.toLowerCase()}</small></div>
+                    </article>
+                  ))}
+                  {!visibleHistory.length && <p className="demo-history-empty">No {historyFilter} activity in this demo history.</p>}
+                </div>
+                <p className="demo-history-disclaimer">Sample history for preview only. Live payment and errand records are not connected here.</p>
+              </section>
             </div>
           )}
 
@@ -280,6 +313,13 @@ function sectionDescription(section: DemoSection, role: DemoRole) {
   if (section === "wallet") return "Track completed errands, available earnings, and payouts.";
   if (section === "payment") return "A clear breakdown before you confirm an accepted offer.";
   return "Explore the account flow in a safe, local-only preview.";
+}
+
+function paymentStatusLabel(status: HistoryEntry["paymentStatus"]) {
+  if (status === "paid") return "Paid";
+  if (status === "cancelled") return "Not charged";
+  if (status === "refunded") return "Refunded";
+  return "Pending";
 }
 
 function DemoErrand({ title, category, price, status, action, onAction }: { title: string; category: string; price: string; status: string; action: string; onAction: () => void }) {
