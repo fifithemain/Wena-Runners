@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520" role="img" aria-labelledby="title">
+  <title id="title">Local Runner carrying groceries through a sunny neighbourhood</title>
+  <rect width="760" height="520" fill="#d9eff5"/>
+  <circle cx="633" cy="92" r="46" fill="#f8d879"/>
+  <path d="M0 270 175 154l103 82 131-129 167 150 106-84 78 69v278H0Z" fill="#b6d7bc"/>
+  <path d="m0 305 141-91 124 73 122-92 146 84 115-101 112 61v281H0Z" fill="#79b990"/>
+  <path d="M0 332h760v188H0Z" fill="#a2c983"/>
+  <path d="M45 160h140v172H45z" fill="#f8f8ec"/>
+  <path d="M58 174h114v158H58z" fill="#e8f0df"/>
+  <path d="M58 224h114v7H58zM110 174h7v158h-7z" fill="#bfd5c1"/>
+  <path d="M195 185h100v147H195z" fill="#fffdf5"/>
+  <path d="M205 196h80v136h-80z" fill="#c8e0e7"/>
+  <path d="M205 258h80v7h-80zM242 196h7v136h-7z" fill="#fffdf5"/>
+  <path d="M0 384c144-44 244-26 369 3 140 33 249 19 391-20v153H0Z" fill="#557f63"/>
+  <path d="M0 428c195-46 333-14 485 12 94 16 180 9 275-11v91H0Z" fill="#e8e8d6"/>
+  <path d="M0 449c190-42 318-14 445 9 117 22 207 8 315-13" fill="none" stroke="#fffdf5" stroke-width="5" stroke-dasharray="17 20"/>
+  <path d="M45 353c20-28 42-29 62 0 19-27 39-25 54 1" fill="none" stroke="#39784c" stroke-width="13" stroke-linecap="round"/>
+  <path d="M184 350c17-26 33-24 47 2" fill="none" stroke="#39784c" stroke-width="12" stroke-linecap="round"/>
+  <ellipse cx="493" cy="463" rx="111" ry="15" fill="#315a49" opacity=".2"/>
+  <path d="m422 196 61-22 70 35-7 154-102 10-38-111Z" fill="#183f3b"/>
+  <path d="m439 331 55 7-16 83-54-4Z" fill="#173e3d"/>
+  <path d="m478 336 51-2 8 80-51 4Z" fill="#173e3d"/>
+  <path d="m420 408 57 2 24 15-3 11h-84c-12 0-14-10-6-17Z" fill="#203735"/>
+  <path d="m489 411 51-4 24 13c7 4 5 16-3 16h-75Z" fill="#203735"/>
+  <path d="m413 203 36-35 46 22-18 57-36 24-36-34Z" fill="#08734e"/>
+  <path d="m476 190 40-21 37 34-9 79-61-4-26-41Z" fill="#0b8657"/>
+  <path d="m476 198-20 53 47 10 18-53-31-14Z" fill="#08734e"/>
+  <path d="m429 212-24 68 19 9 43-56-8-31Z" fill="#d58d64"/>
+  <path d="m540 214 29 58-20 13-38-51 7-27Z" fill="#d58d64"/>
+  <path d="m462 183 12-35 35 7 5 38-25 23Z" fill="#d99068"/>
+  <path d="m471 150-8-22 13-25 31-6 23 19-7 33-23 8-19-9Z" fill="#8b4e38"/>
+  <path d="m463 135-8-25 11-35 33-20 42 13 10 27-12 37-9-26-18-8-23 12-11 23Z" fill="#182f2a"/>
+  <path d="m491 173 5 22 18-5 2-22Z" fill="#f2c49e"/>
+  <path d="m476 210 21-9 21 9 6 21-27-4-24 6Z" fill="#fffdf5"/>
+  <path d="m484 216 20 0-2 12h-16Z" fill="#08734e"/>
+  <path d="m500 266 40 4 25 71-81 10-30-38Z" fill="#e9ad62"/>
+  <path d="m492 279 35 3 6 46-42-2Z" fill="#f7d28d"/>
+  <path d="m560 277 34 3 25 72-77 1Z" fill="#cb8e4e"/>
+  <path d="m568 291 22 1 14 44-43-1Z" fill="#e8bc79"/>
+  <path d="m502 202 17 4 4 18-10 9-15-9Z" fill="#f7fbf5"/>
+  <path d="m509 211 7 0-2 7-5 0Z" fill="#08734e"/>
+  <path d="m436 183 22 13-24 58-31-19 16-37Z" fill="#0d6548"/>
+</svg>

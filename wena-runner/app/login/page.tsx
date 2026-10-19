@@ -1,17 +1,26 @@
 import { SignIn } from "@clerk/nextjs";
 import Link from "next/link";
+import { RunnerScene } from "../landing-artwork";
 
 export default function Login() {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
   return (
-    <main className="formwrap">
-      <Link href="/" className="brand">
-        WENA <span>RUNNERS</span>
-      </Link>
-      <section className="panel" style={{ marginTop: 24 }}>
+    <main className="auth-layout">
+      <aside className="auth-aside">
+        <Link href="/" className="brand" aria-label="WENA Runners home">
+          <span className="brand-symbol" aria-hidden="true">w</span>
+          <span className="brand-wordmark">wena<span>runners</span></span>
+        </Link>
+        <div className="auth-aside-copy">
+          <h2>Your time, back in your hands.</h2>
+          <p>Get your errands done with trusted local Runners.</p>
+        </div>
+        <div className="auth-scene"><RunnerScene /></div>
+      </aside>
+      <section className="panel auth-panel">
         <h1>Welcome back.</h1>
-        <p className="muted">Sign in with an existing WENA account. If you have not registered yet, create an account first and choose whether you want to request errands, become a Runner, or do both.</p>
+        <p className="muted">Sign in to manage errands, Runner offers, and your account.</p>
         {clerkConfigured ? (
           <div style={{ marginTop: 20, minHeight: 360 }}>
             <SignIn
@@ -35,6 +44,7 @@ export default function Login() {
         <p className="muted" style={{ marginTop: 20 }}>
           New to WENA Runners? <Link href="/signup">Create an account</Link>
         </p>
+        <p className="muted"><Link href="/demo">Explore the interactive demo</Link></p>
       </section>
     </main>
   );
