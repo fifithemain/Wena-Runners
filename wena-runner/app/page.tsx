@@ -25,8 +25,7 @@ export default function Home() {
       />
       <nav className="shell nav">
         <Link href="/" className="brand" aria-label="WENA Runners home">
-          <span className="brand-symbol" aria-hidden="true">w</span>
-          <span className="brand-wordmark">wena<span>runners</span></span>
+          <img className="brand-image" src="/wena-logo.svg" alt="WENA Runners" />
         </Link>
         <div className="navlinks">
           <a href="#errands">Explore errands</a>
