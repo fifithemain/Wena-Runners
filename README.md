@@ -1,4 +1,4 @@
-# WENA Runners v3 — Negotiable Errands
+# WENA Runners — Negotiable Errands
 
 WENA connects customers with verified local Runners. Customers post an errand and budget, Runners make offers, the customer accepts one, and a private hand-off PIN confirms completion.
 
