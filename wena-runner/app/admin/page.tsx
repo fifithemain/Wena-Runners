@@ -59,12 +59,11 @@ export default function Admin() {
   return (
     <main>
       <nav className="shell nav">
-        <Link href="/" className="brand">WENA <span>RUNNERS</span></Link>
+        <Link href="/" className="brand" aria-label="WENA Runners home"><span className="brand-symbol" aria-hidden="true">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link>
         <Link href="/jobs">Errand board</Link>
       </nav>
       <section className="shell">
         <header className="pagehead">
-          <span className="eyebrow">OPERATIONS</span>
           <h1>Admin desk</h1>
           <p className="muted">Review Runner approvals, payout requests, and disputed errands.</p>
         </header>

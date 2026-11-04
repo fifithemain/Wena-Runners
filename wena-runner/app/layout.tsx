@@ -6,6 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "WENA Runners — Negotiable Errands",
   description: "Post an errand, agree a fair price, and get it done by a verified local Runner.",
+  icons: { icon: "/wena-runner-favicon.svg", shortcut: "/wena-runner-favicon.svg", apple: "/wena-runner-favicon.svg" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
