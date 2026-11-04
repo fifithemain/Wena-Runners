@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { getCurrentProfile } from "@/lib/current-profile";
 
+const PHYSICAL_CATEGORIES = ["electronics", "clothing", "groceries", "keys_documents"];
+const COURIERS = ["The Courier Guy", "PUDO", "PAXI", "Fastway Couriers", "Aramex"];
+
 function db() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -24,7 +27,7 @@ export async function GET() {
     const { data: jobs, error: jobsError } = await supabase
       .from("jobs")
       .select(
-        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,created_at,flag_reason,collection_pin",
+        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,courier_required,courier_provider,courier_fee,created_at,flag_reason,collection_pin",
       )
       .in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment", "completed", "cancelled"])
       .order("created_at", { ascending: false })
@@ -103,6 +106,9 @@ export async function POST(request: Request) {
     const pickup = String(form.get("pickupAddress") || "").trim().slice(0, 500);
     const dropoff = String(form.get("dropoffAddress") || "").trim().slice(0, 500);
     const budget = Number(form.get("requestedBudget"));
+    const courierRequired = form.get("courierRequired") === "true";
+    const courierProvider = courierRequired ? String(form.get("courierProvider") || "") : null;
+    const courierFee = courierRequired ? Math.round(Number(form.get("courierFee")) * 100) / 100 : null;
     if (
       !["electronics", "clothing", "groceries", "keys_documents", "general_assistance", "other"].includes(
         category,
@@ -115,6 +121,18 @@ export async function POST(request: Request) {
       budget > 100000
     ) {
       return error("Complete every field with a valid budget.");
+    }
+
+    if (
+      courierRequired &&
+      (!PHYSICAL_CATEGORIES.includes(category) ||
+        !COURIERS.includes(courierProvider || "") ||
+        typeof courierFee !== "number" ||
+        !Number.isFinite(courierFee) ||
+        courierFee <= 0 ||
+        courierFee > 100000)
+    ) {
+      return error("Choose a courier and enter a valid courier fee.");
     }
 
     const receiptRequired = ["electronics", "clothing", "groceries", "keys_documents"].includes(category);
@@ -156,6 +174,9 @@ export async function POST(request: Request) {
         dropoff_address: dropoff,
         requested_budget: Math.round(budget),
         receipt_required: receiptRequired,
+        courier_required: courierRequired,
+        courier_provider: courierProvider,
+        courier_fee: courierFee,
         receipt_path: receiptPath,
         status: "posted",
         payment_status: "pending",

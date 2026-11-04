@@ -703,3 +703,9 @@ img, svg { max-width: 100%; }
 .workspace-header .brand-image { width:clamp(160px, 18vw, 220px); max-height:48px; }
 .footer .brand-image { width:210px; max-height:44px; }
 @media (max-width: 640px) { .brand-image { width:168px; max-height:42px; } .workspace-header .brand-image { width:150px; max-height:38px; } }
+
+.courier-toggle{display:flex!important;align-items:center;gap:10px;cursor:pointer}
+.courier-toggle input{width:18px!important;height:18px;min-height:18px!important;padding:0;border-radius:4px;margin:0;accent-color:var(--green)}
+.courier-toggle span{font-size:14px;font-weight:700}
+.courier-details{margin-top:8px}
+.courier-details .field{margin:8px 0}

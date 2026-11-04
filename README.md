@@ -14,11 +14,12 @@ Never expose service-role keys, Yoco secrets or admin password as `NEXT_PUBLIC_*
 ## Launch checklist
 1. Set all environment variables in Vercel Production and Preview.
 2. Run `wena-runner/supabase/clerk-auth.sql` against the connected Supabase database before deploying the Clerk integration.
-3. Set the Clerk publishable and secret keys from Clerk application `app_3KafaH3mrxevNppTrzuR3n8iq06`. Never commit these values.
-4. Existing users must create a Clerk account with the same verified email address to reconnect their existing WENA profile. Supabase passwords and active sessions do not transfer; new users set their password through Clerk.
-5. New Clerk users receive an internal Supabase Auth identity so existing UUID-based errand, message, and payout relationships continue working. Users authenticate with Clerk; do not use the internal Supabase identity to sign in. After cutover, disable public Supabase Auth sign-up and sign-in while retaining the server-side admin API used for these internal identities.
-6. Register a Paystack webhook at `/api/payments/webhook` and test `charge.success` in Paystack test mode before live payments.
-7. Run `npm ci && npm run build` from `wena-runner` and test customer/Runner/admin flows before production payments.
-8. Do not process live payments until webhook reconciliation is verified.
+3. Apply any unapplied SQL migrations in `wena-runner/supabase/migrations/` in timestamp order before deploying application changes.
+4. Set the Clerk publishable and secret keys from Clerk application `app_3KafaH3mrxevNppTrzuR3n8iq06`. Never commit these values.
+5. Existing users must create a Clerk account with the same verified email address to reconnect their existing WENA profile. Supabase passwords and active sessions do not transfer; new users set their password through Clerk.
+6. New Clerk users receive an internal Supabase Auth identity so existing UUID-based errand, message, and payout relationships continue working. Users authenticate with Clerk; do not use the internal Supabase identity to sign in. After cutover, disable public Supabase Auth sign-up and sign-in while retaining the server-side admin API used for these internal identities.
+7. Register a Paystack webhook at `/api/payments/webhook` and test `charge.success` in Paystack test mode before live payments.
+8. Run `npm ci && npm run build` from `wena-runner` and test customer/Runner/admin flows before production payments.
+9. Do not process live payments until webhook reconciliation is verified.
 
 The connected Supabase project already has the v3 tables. `wena-runner/supabase/v3-hardening.sql` is an additive migration (no data deletion).
