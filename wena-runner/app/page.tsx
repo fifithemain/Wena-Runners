@@ -28,9 +28,6 @@ export default function Home() {
           <img className="brand-image" src="/wena-logo.svg" alt="WENA Runners" />
         </Link>
         <div className="navlinks">
-          <a href="#errands">Explore errands</a>
-          <a href="#how">How it works</a>
-          <Link href="/signup">Become a Runner</Link>
           <AuthControls clerkConfigured={clerkConfigured} />
         </div>
       </nav>
