@@ -24,14 +24,18 @@ export async function GET() {
   try {
     const profile = await getCurrentProfile();
     const supabase = db();
-    const { data: jobs, error: jobsError } = await supabase
-      .from("jobs")
-      .select(
-        "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,courier_required,courier_provider,courier_fee,created_at,flag_reason,collection_pin",
-      )
-      .in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment", "completed", "cancelled"])
-      .order("created_at", { ascending: false })
-      .limit(100);
+    const baseCols =
+      "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,created_at,flag_reason,collection_pin";
+    const listJobs = (cols: string) =>
+      supabase
+        .from("jobs")
+        .select(cols)
+        .in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment", "completed", "cancelled"])
+        .order("created_at", { ascending: false })
+        .limit(100);
+    let { data: jobs, error: jobsError } = (await listJobs(`${baseCols},courier_required,courier_provider,courier_fee`)) as any;
+    // Courier columns are missing until the courier migration is applied.
+    if (jobsError?.message.includes("courier_")) ({ data: jobs, error: jobsError } = (await listJobs(baseCols)) as any);
     if (jobsError) return error(jobsError.message, 500);
 
     // Keep each account type in its own workspace:
