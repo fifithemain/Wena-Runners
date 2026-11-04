@@ -2,6 +2,7 @@
 
 import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 function SignedOutLinks() {
   return (
@@ -19,6 +20,22 @@ function SignedOutLinks() {
 
 function ClerkControls() {
   const { isLoaded, isSignedIn } = useAuth();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    let active = true;
+    fetch("/api/jobs")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active) setRole(data?.profile?.role ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [isSignedIn]);
+
   if (!isLoaded) return null;
   if (!isSignedIn) return <SignedOutLinks />;
 
@@ -26,7 +43,7 @@ function ClerkControls() {
     <>
       <Link href="/jobs">My errands</Link>
       <Link href="/messages">Messages</Link>
-      <Link href="/earnings">Wallet</Link>
+      {(role === "runner" || role === "both") && <Link href="/earnings">Wallet</Link>}
       <Link href="/account">Account</Link>
       <Link className="btn" href="/jobs?post=1">
         Post an errand
