@@ -57,8 +57,7 @@ export default function WorkspaceShell({
     <main className="workspace-app">
       <header className="workspace-header">
         <Link href="/" className="brand" aria-label="WENA Runners home">
-          <span className="brand-symbol" aria-hidden="true">w</span>
-          <span className="brand-wordmark">wena<span>runners</span></span>
+          <img className="brand-image" src="/wena-logo.svg" alt="WENA Runners" />
         </Link>
         <div className="workspace-user">
           <span className="workspace-avatar" aria-hidden="true">{initials}</span>

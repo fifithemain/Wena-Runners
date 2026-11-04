@@ -696,3 +696,10 @@ img, svg { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+
+/* Official WENA Runners image wordmark */
+.brand-image { display:block; width:clamp(176px, 21vw, 260px); height:auto; max-height:54px; object-fit:contain; object-position:left center; }
+.workspace-header .brand-image { width:clamp(160px, 18vw, 220px); max-height:48px; }
+.footer .brand-image { width:210px; max-height:44px; }
+@media (max-width: 640px) { .brand-image { width:168px; max-height:42px; } .workspace-header .brand-image { width:150px; max-height:38px; } }
