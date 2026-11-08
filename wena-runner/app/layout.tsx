@@ -1,11 +1,30 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import "./globals.css";
+import CookieConsent from "./cookie-consent";
+
+const siteUrl = "https://wena-runners.vercel.app";
 
 export const metadata: Metadata = {
-  title: "WENA Runners — Negotiable Errands",
-  description: "Post an errand, agree a fair price, and get it done by a verified local Runner.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "WENA Runners | Local errands, fair deals",
+    template: "%s | WENA Runners",
+  },
+  description: "Post an errand, agree a fair price, and get it done by a verified local Runner in your neighbourhood.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "WENA Runners",
+    title: "WENA Runners | Local errands, fair deals",
+    description: "Post an errand, agree a fair price, and get it done by a verified local Runner in your neighbourhood.",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WENA Runners | Local errands, fair deals",
+    description: "Post an errand, agree a fair price, and get it done by a verified local Runner in your neighbourhood.",
+  },
   icons: { icon: "/wena-runner-favicon.svg", shortcut: "/wena-runner-favicon.svg", apple: "/wena-runner-favicon.svg" },
 };
 
@@ -16,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en-ZA">
       <body>
         {clerkConfigured ? <ClerkProvider>{children}</ClerkProvider> : children}
-        <Analytics />
+        <CookieConsent />
       </body>
     </html>
   );

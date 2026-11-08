@@ -5,18 +5,29 @@ import { getCurrentProfile } from "@/lib/current-profile";
 
 const PHYSICAL_CATEGORIES = ["electronics", "clothing", "groceries", "keys_documents"];
 const COURIERS = ["The Courier Guy", "PUDO", "PAXI", "Fastway Couriers", "Aramex"];
+const postWindows = new Map<string, { count: number; resetAt: number }>();
+const POST_LIMIT = 5;
+const POST_WINDOW_MS = 10 * 60 * 1000;
+
+function canPost(profileId: string) {
+  const now = Date.now();
+  const window = postWindows.get(profileId);
+  if (!window || window.resetAt <= now) {
+    postWindows.set(profileId, { count: 1, resetAt: now + POST_WINDOW_MS });
+    return true;
+  }
+  if (window.count >= POST_LIMIT) return false;
+  window.count += 1;
+  return true;
+}
 
 function db() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) {
-    throw new Error(
-      "Supabase is not configured on this deployment. Add SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY in Vercel Project Settings → Environment Variables, then redeploy.",
-    );
+    throw new Error("Supabase is not configured on this deployment. Add SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY in Vercel Project Settings → Environment Variables, then redeploy.");
   }
-  return createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createClient(url, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 const error = (message: string, status = 400) => NextResponse.json({ error: message }, { status });
 
@@ -24,23 +35,11 @@ export async function GET() {
   try {
     const profile = await getCurrentProfile();
     const supabase = db();
-    const baseCols =
-      "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,created_at,flag_reason,collection_pin";
-    const listJobs = (cols: string) =>
-      supabase
-        .from("jobs")
-        .select(cols)
-        .in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment", "completed", "cancelled"])
-        .order("created_at", { ascending: false })
-        .limit(100);
+    const baseCols = "id,customer_id,runner_id,category,description,pickup_address,dropoff_address,requested_budget,final_budget,service_fee,total_charge,payment_status,status,receipt_required,created_at,flag_reason,collection_pin";
+    const listJobs = (cols: string) => supabase.from("jobs").select(cols).in("status", ["posted", "assigned", "in_progress", "disputed", "awaiting_payment", "completed", "cancelled"]).order("created_at", { ascending: false }).limit(100);
     let { data: jobs, error: jobsError } = (await listJobs(`${baseCols},courier_required,courier_provider,courier_fee`)) as any;
-    // Courier columns are missing until the courier migration is applied.
     if (jobsError?.message.includes("courier_")) ({ data: jobs, error: jobsError } = (await listJobs(baseCols)) as any);
     if (jobsError) return error(jobsError.message, 500);
-
-    // Keep each account type in its own workspace:
-    // customers see only their own errands; Runners see public posted work and
-    // errands assigned to them; "both" accounts can use both experiences.
     const visibleJobs = (jobs || []).filter((job) => {
       if (!profile) return job.status === "posted";
       if (profile.role === "customer") return job.customer_id === profile.id;
@@ -48,49 +47,28 @@ export async function GET() {
       if (profile.role === "both") return job.customer_id === profile.id || job.runner_id === profile.id || job.status === "posted";
       return false;
     });
-
     const offers: Record<string, any[]> = {};
     if (profile && visibleJobs.length) {
       const customerJobIds = visibleJobs.filter((job) => job.customer_id === profile.id).map((job) => job.id);
       const runnerJobIds = visibleJobs.filter((job) => job.status === "posted" && job.customer_id !== profile.id).map((job) => job.id);
       if (customerJobIds.length) {
-        const { data } = await supabase
-          .from("job_offers")
-          .select("id,job_id,runner_id,offered_amount,note,status,created_at")
-          .in("job_id", customerJobIds)
-          .eq("status", "pending");
+        const { data } = await supabase.from("job_offers").select("id,job_id,runner_id,offered_amount,note,status,created_at").in("job_id", customerJobIds).eq("status", "pending");
         for (const offer of data || []) (offers[offer.job_id] ||= []).push(offer);
       }
       if (["runner", "both"].includes(profile.role) && runnerJobIds.length) {
-        const { data } = await supabase
-          .from("job_offers")
-          .select("id,job_id,runner_id,offered_amount,note,status,created_at")
-          .eq("runner_id", profile.id)
-          .eq("status", "pending")
-          .in("job_id", runnerJobIds);
+        const { data } = await supabase.from("job_offers").select("id,job_id,runner_id,offered_amount,note,status,created_at").eq("runner_id", profile.id).eq("status", "pending").in("job_id", runnerJobIds);
         for (const offer of data || []) {
           const bucket = (offers[offer.job_id] ||= []);
           if (!bucket.some((item) => item.id === offer.id)) bucket.push(offer);
         }
       }
     }
-
     const safeJobs = visibleJobs.map((job) => {
       const isCustomer = profile?.id === job.customer_id;
       const isParticipant = isCustomer || profile?.id === job.runner_id;
       const { collection_pin, ...publicJob } = job;
-      return {
-        ...publicJob,
-        ...(isCustomer ? { collection_pin } : {}),
-        ...(!isParticipant
-          ? {
-              pickup_address: "Shared after assignment",
-              dropoff_address: "Shared after assignment",
-            }
-          : {}),
-      };
+      return { ...publicJob, ...(isCustomer ? { collection_pin } : {}), ...(!isParticipant ? { pickup_address: "Shared after assignment", dropoff_address: "Shared after assignment" } : {}) };
     });
-
     return NextResponse.json({ jobs: safeJobs, profile, offers });
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : "Could not load errands";
@@ -103,6 +81,7 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile();
     if (!profile) return error("Sign in to post an errand.", 401);
     if (!["customer", "both"].includes(profile.role)) return error("This account cannot post errands.", 403);
+    if (!canPost(profile.id)) return error("You have posted several errands recently. Please wait a few minutes before trying again.", 429);
 
     const form = await request.formData();
     const category = String(form.get("category") || "");
@@ -113,81 +92,29 @@ export async function POST(request: Request) {
     const courierRequired = form.get("courierRequired") === "true";
     const courierProvider = courierRequired ? String(form.get("courierProvider") || "") : null;
     const courierFee = courierRequired ? Math.round(Number(form.get("courierFee")) * 100) / 100 : null;
-    if (
-      !["electronics", "clothing", "groceries", "keys_documents", "general_assistance", "other"].includes(
-        category,
-      ) ||
-      !description ||
-      !pickup ||
-      !dropoff ||
-      !Number.isFinite(budget) ||
-      budget < 1 ||
-      budget > 100000
-    ) {
-      return error("Complete every field with a valid budget.");
-    }
-
-    if (
-      courierRequired &&
-      (!PHYSICAL_CATEGORIES.includes(category) ||
-        !COURIERS.includes(courierProvider || "") ||
-        typeof courierFee !== "number" ||
-        !Number.isFinite(courierFee) ||
-        courierFee <= 0 ||
-        courierFee > 100000)
-    ) {
-      return error("Choose a courier and enter a valid courier fee.");
-    }
-
+    if (!["electronics", "clothing", "groceries", "keys_documents", "general_assistance", "other"].includes(category) || !description || !pickup || !dropoff || !Number.isFinite(budget) || budget < 1 || budget > 100000) return error("Complete every field with a valid budget.");
+    if (courierRequired && (!PHYSICAL_CATEGORIES.includes(category) || !COURIERS.includes(courierProvider || "") || typeof courierFee !== "number" || !Number.isFinite(courierFee) || courierFee <= 0 || courierFee > 100000)) return error("Choose a courier and enter a valid courier fee.");
     const receiptRequired = ["electronics", "clothing", "groceries", "keys_documents"].includes(category);
     const file = form.get("receipt");
-    if (receiptRequired && !(file instanceof File)) {
-      return error("A receipt or proof of payment is required for this category.");
-    }
-
+    if (receiptRequired && !(file instanceof File)) return error("A receipt or proof of payment is required for this category.");
     const supabase = db();
     let receiptPath: string | null = null;
     if (file instanceof File) {
       if (file.size <= 0 || file.size > 8 * 1024 * 1024) return error("Receipt must be between 1 byte and 8 MB.");
-      const allowedTypes: Record<string, string> = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/webp": "webp",
-        "application/pdf": "pdf",
-      };
+      const allowedTypes: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" };
       const safeExtension = allowedTypes[file.type];
       if (!safeExtension) return error("Receipt must be a JPEG, PNG, WebP image, or PDF.");
       const path = `${profile.id}/${crypto.randomUUID()}.${safeExtension}`;
-      const { error: uploadError } = await supabase.storage
-        .from("receipts")
-        .upload(path, await file.arrayBuffer(), {
-          contentType: file.type,
-          upsert: false,
-        });
+      const { error: uploadError } = await supabase.storage.from("receipts").upload(path, await file.arrayBuffer(), { contentType: file.type, upsert: false });
       if (uploadError) return error(`Receipt upload failed: ${uploadError.message}`, 500);
       receiptPath = path;
     }
-
-    const { data: job, error: insertError } = await supabase
-      .from("jobs")
-      .insert({
-        customer_id: profile.id,
-        category,
-        description,
-        pickup_address: pickup,
-        dropoff_address: dropoff,
-        requested_budget: Math.round(budget),
-        receipt_required: receiptRequired,
-        courier_required: courierRequired,
-        courier_provider: courierProvider,
-        courier_fee: courierFee,
-        receipt_path: receiptPath,
-        status: "posted",
-        payment_status: "pending",
-        collection_pin: String(crypto.randomInt(100000, 999999)),
-      })
-      .select("id,collection_pin")
-      .single();
+    const { data: job, error: insertError } = await supabase.from("jobs").insert({
+      customer_id: profile.id, category, description, pickup_address: pickup, dropoff_address: dropoff,
+      requested_budget: Math.round(budget), receipt_required: receiptRequired, courier_required: courierRequired,
+      courier_provider: courierProvider, courier_fee: courierFee, receipt_path: receiptPath, status: "posted",
+      payment_status: "pending", collection_pin: String(crypto.randomInt(100000, 999999)),
+    }).select("id,collection_pin").single();
     if (insertError) return error(insertError.message, 500);
     return NextResponse.json({ jobId: job.id, collectionPin: job.collection_pin });
   } catch (cause) {

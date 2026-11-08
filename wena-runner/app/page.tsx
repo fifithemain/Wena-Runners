@@ -3,10 +3,7 @@ import AuthControls from "./auth-controls";
 import { CategoryArtwork, RunnerScene } from "./landing-artwork";
 
 export default function Home() {
-  const clerkConfigured = Boolean(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  );
-
+  const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const categories = [
     { title: "Pick-ups & deliveries", description: "Parcels, documents and the things you need moved.", kind: "pickup" as const, category: "pickup" },
     { title: "Grocery runs", description: "Get everyday essentials delivered to your door.", kind: "groceries" as const, category: "groceries" },
@@ -17,33 +14,18 @@ export default function Home() {
 
   return (
     <main className="landing-page">
-      <template
-        dangerouslySetInnerHTML={{
-          __html:
-            "<!-- THESIS: A local errand marketplace, not a generic courier storefront; put the task and customer-owned budget first. OWN-WORLD: Crisp white and pale mint planes, deep ink, runner green, rounded service cards, and original neighborhood artwork. STORY: Customers post an errand, compare Runner offers, pay, and confirm the hand-off; Runners find work and earnings. FIRST VIEWPORT: Slim navigation above a two-column headline and illustrated neighborhood scene, with the errand action beside the headline and a trust strip below. FORM: User-pinned marketplace composition from the supplied WENA Runners reference. -->",
-        }}
-      />
       <nav className="shell nav">
         <Link href="/" className="brand" aria-label="WENA Runners home">
           <img className="brand-image" src="/wena-logo.svg" alt="WENA Runners" />
         </Link>
-        <div className="navlinks">
-          <AuthControls clerkConfigured={clerkConfigured} />
-        </div>
+        <div className="navlinks"><AuthControls clerkConfigured={clerkConfigured} /></div>
       </nav>
       <section className="shell hero">
         <div className="hero-copy">
           <h1>Your to-do list.<br /><span>Handled.</span></h1>
-          <p>
-            From quick pick-ups to everyday errands, find a trusted local Runner and get your time back.
-          </p>
+          <p>From quick pick-ups to everyday errands, find a trusted local Runner and get your time back.</p>
           <div className="actions">
-            <Link className="btn" href="/jobs?post=1">
-              Post an errand <span aria-hidden="true">→</span>
-            </Link>
-            <Link className="btn ghost" href="/jobs">
-              Browse errands
-            </Link>
+            <Link className="btn" href="/jobs?post=1">Post an errand <span aria-hidden="true">→</span></Link>
           </div>
           <div className="hero-proof">
             <span className="proof-item"><span aria-hidden="true">✓</span> Agree on your price</span>
@@ -53,10 +35,7 @@ export default function Home() {
         </div>
         <div className="hero-visual">
           <RunnerScene />
-          <div className="runner-note">
-            <span className="runner-note-pin" aria-hidden="true">⌖</span>
-            <span><strong>Local Runners</strong><small>Across your neighbourhood</small></span>
-          </div>
+          <div className="runner-note"><span className="runner-note-pin" aria-hidden="true">⌖</span><span><strong>Local Runners</strong><small>Across your neighbourhood</small></span></div>
           <div className="scene-caption">More time for what matters.</div>
         </div>
       </section>
@@ -82,42 +61,21 @@ export default function Home() {
         </div>
       </section>
       <section className="shell process-section" id="how">
-        <div className="process-copy">
-          <h2>How WENA Runners works</h2>
-          <p>Getting things done in just a few simple steps.</p>
-        </div>
+        <div className="process-copy"><h2>How WENA Runners works</h2><p>Getting things done in just a few simple steps.</p></div>
         <div className="process-steps">
-          <article className="process-step">
-            <span className="step-number">1</span>
-            <div><h3>Post your errand</h3><p>Tell us what you need and set the budget you have in mind.</p></div>
-          </article>
-          <article className="process-step">
-            <span className="step-number">2</span>
-            <div><h3>Agree on a price</h3><p>Compare offers from verified Runners and choose the one that works for you.</p></div>
-          </article>
-          <article className="process-step">
-            <span className="step-number">3</span>
-            <div><h3>Your Runner gets it done</h3><p>Keep in touch, then confirm the hand-off with your private PIN.</p></div>
-          </article>
+          <article className="process-step"><span className="step-number">1</span><div><h3>Post your errand</h3><p>Tell us what you need and set the budget you have in mind.</p></div></article>
+          <article className="process-step"><span className="step-number">2</span><div><h3>Agree on a price</h3><p>Compare offers from verified Runners and choose the one that works for you.</p></div></article>
+          <article className="process-step"><span className="step-number">3</span><div><h3>Your Runner gets it done</h3><p>Keep in touch, then confirm the hand-off with your private PIN.</p></div></article>
         </div>
       </section>
       <section className="shell runner-cta">
-        <div>
-          <h2>Earn on your own schedule.</h2>
-          <p>Know your neighbourhood? Make money by helping people nearby.</p>
-          <Link className="btn" href="/signup">Become a Runner <span aria-hidden="true">→</span></Link>
-        </div>
-        <div className="cta-route" aria-hidden="true">
-          <span>⌖</span><i></i><span>✓</span>
-          <div className="cta-bag">W</div>
-        </div>
+        <div><h2>Earn on your own schedule.</h2><p>Know your neighbourhood? Make money by helping people nearby.</p><Link className="btn" href="/signup">Become a Runner <span aria-hidden="true">→</span></Link></div>
+        <div className="cta-route" aria-hidden="true"><span>⌖</span><i></i><span>✓</span><div className="cta-bag">W</div></div>
       </section>
       <footer className="shell footer">
-        <Link href="/" className="brand" aria-label="WENA Runners home">
-          <span className="brand-symbol" aria-hidden="true">w</span>
-          <span className="brand-wordmark">wena<span>runners</span></span>
-        </Link>
+        <Link href="/" className="brand" aria-label="WENA Runners home"><span className="brand-symbol" aria-hidden="true">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link>
         <span>Local errands. Fair deals. Real people.</span>
+        <nav className="footer-legal" aria-label="Legal"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav>
         <span>© {new Date().getFullYear()} WENA</span>
       </footer>
     </main>
