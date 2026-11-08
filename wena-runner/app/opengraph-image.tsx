@@ -12,7 +12,7 @@ export default function OpenGraphImage() {
         WENA RUNNERS
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ fontSize: 76, fontWeight: 700, letterSpacing: -4, lineHeight: 1.05 }}>Your to-do list.<br />Handled.</div>
+        <div style={{ display: "flex", flexDirection: "column", fontSize: 76, fontWeight: 700, letterSpacing: -4, lineHeight: 1.05 }}>Your to-do list.<br />Handled.</div>
         <div style={{ color: "#35535a", fontSize: 30 }}>Local errands. Fair deals. Real people.</div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, color: "#006b43", fontSize: 22, fontWeight: 700 }}>Post an errand <span>→</span> agree a fair price <span>→</span> get it done</div>
