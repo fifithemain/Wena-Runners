@@ -2,7 +2,7 @@
 
 import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 type ProfileDetails = {
   fullName: string;
@@ -16,14 +16,51 @@ export default function SignupForm() {
   const router = useRouter();
   const [role, setRole] = useState<ProfileDetails["role"]>("customer");
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationComplete, setVerificationComplete] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const runnerDetails = useRef<{ idNumber: string; idDocument: File | null; selfie: File | null }>({
+    idNumber: "",
+    idDocument: null,
+    selfie: null,
+  });
+
+  async function finishRunnerRegistration() {
+    const profileResponse = await fetch("/api/auth/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flow: "signup" }),
+      cache: "no-store",
+    });
+    const profileResult: { profile?: { role?: string }; error?: string } = await profileResponse.json().catch(() => ({}));
+    if (!profileResponse.ok || !profileResult.profile) {
+      throw new Error(profileResult.error || "We couldn't finish setting up your account.");
+    }
+    if (!["runner", "both"].includes(profileResult.profile.role || "")) return;
+
+    const { idNumber, idDocument, selfie } = runnerDetails.current;
+    if (!idNumber || !idDocument || !selfie) {
+      throw new Error("Runner registration needs your ID number, ID photo, and selfie. Please return to signup and add them.");
+    }
+    for (const [documentType, file] of [["idDocument", idDocument], ["selfie", selfie]] as const) {
+      const form = new FormData();
+      form.set("documentType", documentType);
+      form.set("file", file);
+      if (documentType === "idDocument") form.set("idNumber", idNumber);
+      const uploadResponse = await fetch("/api/runner-verification", { method: "POST", body: form });
+      const uploadResult: { error?: string } = await uploadResponse.json().catch(() => ({}));
+      if (!uploadResponse.ok) throw new Error(uploadResult.error || `We couldn't upload your ${documentType === "idDocument" ? "ID photo" : "selfie"}.`);
+    }
+  }
 
   async function activateSession(attempt = signUp) {
     if (attempt.status === "complete" && attempt.createdSessionId) {
       await setActive({ session: attempt.createdSessionId });
+      setVerificationComplete(true);
+      setNeedsVerification(true);
+      await finishRunnerRegistration();
       router.replace("/auth/complete?flow=signup");
       return true;
     }
@@ -61,6 +98,20 @@ export default function SignupForm() {
       role: String(data.get("role") || "customer") as ProfileDetails["role"],
       zone: String(data.get("zone") || "").trim(),
     };
+    if (details.role !== "customer") {
+      const idDocument = data.get("idDocument");
+      const selfie = data.get("selfie");
+      runnerDetails.current = {
+        idNumber: String(data.get("idNumber") || "").trim(),
+        idDocument: idDocument instanceof File && idDocument.size ? idDocument : null,
+        selfie: selfie instanceof File && selfie.size ? selfie : null,
+      };
+      if (!runnerDetails.current.idNumber || !runnerDetails.current.idDocument || !runnerDetails.current.selfie) {
+        setError("Enter your ID number and choose both an ID photo and a selfie.");
+        setBusy(false);
+        return;
+      }
+    }
     const email = String(data.get("emailAddress") || "").trim().toLowerCase();
     const password = String(data.get("password") || "");
 
@@ -103,7 +154,32 @@ export default function SignupForm() {
     }
   }
 
+  async function handleFinishRegistration() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await finishRunnerRegistration();
+      router.replace("/auth/complete?flow=signup");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't finish your registration. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (needsVerification) {
+    if (verificationComplete) {
+      return (
+        <div>
+          <p className="muted">Your email is verified. Finish setting up your WENA account and Runner documents.</p>
+          {error && <p className="error" role="alert">{error}</p>}
+          <button className="btn" type="button" onClick={handleFinishRegistration} disabled={busy}>
+            {busy ? "Finishing registration…" : "Finish registration"}
+          </button>
+        </div>
+      );
+    }
     return (
       <form onSubmit={handleVerification}>
         <p className="muted">We sent a verification code to <strong>{emailAddress}</strong>. Enter it below to finish creating your WENA account.</p>
@@ -147,10 +223,26 @@ export default function SignupForm() {
         </select>
       </div>
       {role !== "customer" && (
-        <div className="field">
-          <label htmlFor="zone">Runner area / zone</label>
-          <input id="zone" name="zone" required maxLength={120} autoComplete="address-level2" />
-        </div>
+        <>
+          <div className="field">
+            <label htmlFor="zone">Runner area / zone</label>
+            <input id="zone" name="zone" required maxLength={120} autoComplete="address-level2" />
+          </div>
+          <div className="field">
+            <label htmlFor="idNumber">South African ID number</label>
+            <input id="idNumber" name="idNumber" required maxLength={32} autoComplete="off" />
+          </div>
+          <div className="field">
+            <label htmlFor="idDocument">Photo of your ID document</label>
+            <input id="idDocument" name="idDocument" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <small className="small">JPEG, PNG, or WebP. Maximum 4 MB.</small>
+          </div>
+          <div className="field">
+            <label htmlFor="selfie">Selfie</label>
+            <input id="selfie" name="selfie" type="file" accept="image/jpeg,image/png,image/webp" capture="user" required />
+            <small className="small">Take a clear photo of yourself. JPEG, PNG, or WebP, up to 4 MB.</small>
+          </div>
+        </>
       )}
       <div className="field">
         <label htmlFor="emailAddress">Email address</label>

@@ -9,14 +9,14 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <main className="shell workspace-page" style={{ maxWidth: 900, paddingBottom: 60 }}>
-      <header className="pagehead"><h1>Privacy policy</h1><p>Last updated: 4 November 2026</p><p>This notice explains how WENA Runners handles personal information when you use the South African errand marketplace.</p></header>
+      <header className="pagehead"><h1>Privacy policy</h1><p>Last updated: 8 November 2026</p><p>This notice explains how WENA Runners handles personal information when you use the South African errand marketplace.</p></header>
       <div className="panel" style={{ lineHeight: 1.7 }}>
         <h2>Who is responsible</h2>
         <p>WENA Runners is the service that connects customers and local Runners. The legal name, registered address and privacy contact details of the responsible operator must be confirmed and published here before launch. Until then, send privacy requests through the contact channel shown in your account, if available.</p>
         <h2>Information we handle</h2>
-        <p>Depending on how you use the service, this can include your name, email address, phone number, account role and Runner zone; errand descriptions, budgets, pickup and drop-off details, offers and messages; receipts or proof-of-payment files; payment references and status; and Runner payout details you submit. We also receive basic technical and usage information such as device, browser, request and page-visit data.</p>
+        <p>Depending on how you use the service, this can include your name, email address, phone number, account role and Runner zone; Runner ID numbers, ID document photos and selfies submitted for verification; errand descriptions, budgets, pickup and drop-off details, offers and messages; receipts or proof-of-payment files; payment references and status; and Runner payout details you submit. We also receive basic technical and usage information such as device, browser, request and page-visit data.</p>
         <h2>Why we use it</h2>
-        <p>We use this information to create and secure accounts, match customers and Runners, arrange errands, support messaging and hand-off confirmation, process payments and payout requests, prevent misuse, provide support, and operate and improve the service. We use optional site analytics only if you accept analytics in the cookie notice.</p>
+        <p>We use this information to create and secure accounts, verify Runner identity, match customers and Runners, arrange errands, support messaging and hand-off confirmation, process payments and payout requests, prevent misuse, provide support, and operate and improve the service. We use optional site analytics only if you accept analytics in the cookie notice.</p>
         <h2>When information is shared</h2>
         <p>Information is shared with the people involved in an errand as needed to complete it. Pickup and drop-off details are withheld from other users until assignment. Service providers used by the app include Clerk for sign-in, Supabase for application data and file storage, Vercel for hosting and analytics, and Paystack for payment processing. These providers process information to deliver their services and may process it in other countries.</p>
         <h2>Cookies and local storage</h2>
