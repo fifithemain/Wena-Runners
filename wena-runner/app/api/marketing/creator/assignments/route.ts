@@ -27,6 +27,7 @@ export async function POST(request:Request) {
       .select("id,status").maybeSingle();
     if(error) throw error;
     if(!data) return NextResponse.json({error:"This invitation is no longer available."},{status:409});
+    await supabase.from("marketing_audit_log").insert({actor_profile_id:profile.id,action:"creator_invitation_"+body.status,target_type:"marketing_campaign_assignment",target_id:data.id,metadata:{partner_id:partner.id}});
     return NextResponse.json({assignment:data});
   } catch(cause) {
     console.error("Creator invitation response failed:",cause);
