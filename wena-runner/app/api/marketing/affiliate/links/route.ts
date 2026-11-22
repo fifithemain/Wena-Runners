@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       .insert({ partner_id: partner.id, campaign_id: campaignId, code, destination_path: destination, channel })
       .select("id,code,destination_path,channel,status,created_at").single();
     if (error) throw error;
+    await supabase.from("marketing_audit_log").insert({actor_profile_id:profile.id,action:"affiliate_link_created",target_type:"marketing_tracking_link",target_id:data.id,metadata:{channel,campaign_id:campaignId}});
     const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://wena-runners.vercel.app").replace(/\/$/, "");
     return NextResponse.json({ link: { ...data, url: `${base}/r/${code}` } }, { status: 201 });
   } catch (cause) {
