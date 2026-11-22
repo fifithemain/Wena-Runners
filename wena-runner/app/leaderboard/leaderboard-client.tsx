@@ -20,7 +20,7 @@ type Payload = {
 
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
-function dateKey(date: Date) {
+function shiftLocalDay(offset: number) {\n  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });\n  const date = new Date(`${today}T00:00:00Z`);\n  date.setUTCDate(date.getUTCDate() + offset);\n  return date.toISOString().slice(0, 10);\n}\n\nfunction dateKey(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
   const part = (name: string) => parts.find((item) => item.type === name)?.value || "";
   return `${part("year")}-${part("month")}-${part("day")}`;
@@ -82,7 +82,7 @@ export default function LeaderboardClient({ name, role, signedIn }: { name: stri
   const next = data?.streak?.nextMilestone;
 
   return (
-    <WorkspaceShell active="leaderboard" role="both" name="WENA community" signedIn>
+    <WorkspaceShell active="leaderboard" role={role} name={name} signedIn={signedIn}>
       <div className="workspace-page wena-leaderboard">
         <header className="workspace-page-head">
           <div>
