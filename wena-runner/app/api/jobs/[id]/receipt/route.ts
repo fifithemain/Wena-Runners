@@ -2,20 +2,21 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getCurrentProfile } from "@/lib/current-profile";
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const profile = await getCurrentProfile();
     if (!profile) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
     const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
     if (!url || !key) throw new Error("Supabase server configuration is missing.");
     const supabase = createClient(url, key, { auth: { persistSession: false } });
 
     const { data: job } = await supabase
       .from("jobs")
       .select("customer_id,runner_id,receipt_path,receipt_required")
-      .eq("id", params.id)
+      .eq("id", id)
       .maybeSingle();
     if (!job || !job.receipt_path || !job.receipt_required) {
       return NextResponse.json({ error: "Receipt not found." }, { status: 404 });
