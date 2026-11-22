@@ -71,7 +71,7 @@ export default function CookieConsent() {
   if (!ready) return null;
   return (
     <>
-      {choice !== null && choice !== "essential" && <Analytics />}
+      {choice !== null && choice !== "essential" && !pendingReferral && <Analytics />}
       {choice !== null && !pendingReferral && !editing && (
         <button type="button" onClick={() => { setEditing(true); setPreferenceError(""); }}
           style={{ position: "fixed", zIndex: 90, left: 14, bottom: 14, minHeight: 34, padding: "7px 11px", border: "1px solid #bfd8ca", borderRadius: 999, background: "#fff", color: "#064c39", fontSize: 11, fontWeight: 800, boxShadow: "0 4px 14px rgba(16,47,56,.12)" }}>
