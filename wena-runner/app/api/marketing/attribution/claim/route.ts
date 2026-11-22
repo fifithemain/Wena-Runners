@@ -14,8 +14,9 @@ export async function POST() {
   try {
     const profile=await getCurrentProfile();
     if(!profile) return NextResponse.json({ok:false},{status:401});
-    const visitor=cookies().get("wena-referral-visitor")?.value;
-    if(!visitor||cookies().get("wena-referral-consent")?.value!=="granted") return NextResponse.json({ok:true,claimed:0});
+    const jar=await cookies();
+    const visitor=jar.get("wena-referral-visitor")?.value;
+    if(!visitor||jar.get("wena-referral-consent")?.value!=="granted") return NextResponse.json({ok:true,claimed:0});
     const supabase=db();
     const {data,error}=await supabase.from("marketing_attributions")
       .update({profile_id:profile.id,last_seen_at:new Date().toISOString()})
