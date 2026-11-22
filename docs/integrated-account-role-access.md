@@ -1,6 +1,6 @@
 # WENA Runners — Integrated Account & Role-Based Access Architecture
 
-Status: product architecture approved for implementation planning.
+Status: approved architecture; first integrated Growth implementation built on the feature branch, with production activation gated on preview verification.
 
 ## 1. Product and identity decision
 
@@ -303,12 +303,17 @@ The first integrated Growth slice has been implemented on this feature branch:
 
 ### Rollout and unfinished controls
 
-- `marketing_feature_flags.growth_enabled` remains **false** until the latest preview build and end-to-end smoke tests pass.
+- `marketing_feature_flags.growth_enabled` remains **false**. The latest GitHub Actions Next.js production build passes and `npm audit` reports zero vulnerabilities; a current Vercel preview and authenticated end-to-end smoke test are still required before activation.
 - Affiliate commission rules are disabled by default; WENA must explicitly configure and enable rates before activating an Affiliate campaign.
 - No Creator fees or Affiliate commissions are paid automatically. Growth payout request review/transfer controls and final payout reconciliation remain a separate implementation step.
 - Creator usage licences are modelled in the database but the consent/acceptance UI is not yet implemented.
 - The existing admin console is password-header based; Growth deliberately reuses that same admin gate rather than creating a second admin identity. A centrally managed admin permission model should replace that legacy gate in a later security-hardening phase.
-- This feature branch is not merged or deployed to production. Preview/build verification is required before enabling the feature flag.
+- This feature branch is not merged or deployed to production. Vercel refused another preview deployment because the deployment API daily limit had been reached; retry preview deployment when the limit resets. Keep the feature flag OFF until that preview and authenticated smoke test pass.
 
 
 Referral consent handling note: if a first-time visitor arrives before choosing referral measurement, the short referral code remains in the page URL only until they make a cookie choice. The code is recorded as an attribution only after explicit referral consent; declining or choosing analytics-only removes it from the URL without creating an attribution row.
+
+
+### Dependency security update
+
+The application was upgraded from Next.js 14 / React 18 to Next.js 15.5.29 / React 19.2.3. PostCSS is pinned to 8.5.33 and Sharp to 0.35.5. The CI dependency audit now reports 0 total vulnerabilities, and the Next.js production build passes. Existing dynamic route handlers were migrated to asynchronous route parameters for Next.js 15 compatibility.
