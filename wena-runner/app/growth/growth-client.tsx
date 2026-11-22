@@ -155,7 +155,7 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
         <label>Platforms (comma separated)<input value={platforms} onChange={e=>setPlatforms(e.target.value)} placeholder="WhatsApp, Instagram, TikTok"/></label>
         <label>Audience or community<textarea rows={2} maxLength={300} value={audience} onChange={e=>setAudience(e.target.value)} placeholder="Who do you reach? What community do you serve?"/></label>
         <label>Portfolio or social profile URL (optional)<input type="url" value={portfolioUrl} onChange={e=>setPortfolioUrl(e.target.value)} placeholder="https://…"/></label>
-        <label className="growth-terms"><input type="checkbox" checked={termsAccepted} onChange={e=>setTermsAccepted(e.target.checked)}/> I agree to the WENA Growth programme terms and understand that applying does not guarantee approval or earnings.</label>
+        <label className="growth-terms"><input type="checkbox" checked={termsAccepted} onChange={e=>setTermsAccepted(e.target.checked)}/> I agree to the <a href="/growth/terms" target="_blank" rel="noreferrer">WENA Growth programme terms</a> and understand that applying does not guarantee approval or earnings.</label>
         <div className="growth-modal-actions"><button type="button" className="btn ghost" onClick={()=>setApplicationRole(null)}>Cancel</button><button className="btn" disabled={busy||!termsAccepted}>{busy?"Submitting…":"Submit application"}</button></div>
       </form>
     </div>}
