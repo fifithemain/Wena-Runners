@@ -285,3 +285,27 @@ Each phase is feature-flagged and must pass build, role matrix, RLS, ownership i
 - Unreviewed automatic creator publishing or broad content licenses.
 - Automatic payout before reconciliation and admin approval.
 - Replacing the existing Runner wallet, customer checkout, or Paystack flow.
+
+
+## Implementation status — 22 November 2026
+
+The first integrated Growth slice has been implemented on this feature branch:
+
+- Additive Supabase schema for Growth partners, applications, independent Affiliate/Creator grants, campaigns, assignments, tracking links, consented attribution, verified conversions, reward rules, immutable ledger, payout requests, creator deliverables, and usage licences.
+- Server-only APIs resolve the existing Clerk-linked WENA profile and check database-backed role grants. Existing `profiles.role` values and Runner/Customer account behaviour remain unchanged.
+- Unified `/growth` workspace is added to the existing signed-in workspace navigation. Users can apply for Affiliate and/or Creator without creating another account.
+- `/admin/marketing` supports application review, approval, suspension, reactivation and revocation of each capability.
+- `/admin/marketing/campaigns` supports draft campaign creation, Affiliate reward-rule configuration, Creator invitations and deliverable review.
+- Affiliate links use `/r/{code}`. Referral measurement is opt-in through a distinct cookie choice; no raw IP is stored. A signed-in workspace session claims the consented visitor attribution onto the existing WENA profile.
+- The marketplace conversion trigger only awards an Affiliate commission after a persisted errand is both paid and completed, where the referral attribution is consented, within the attribution window, not self-referred, and backed by an active Affiliate grant, active campaign (when applicable), and enabled reward rule.
+- Creator submissions are scoped to the assigned partner. Admin approval records the agreed Creator fee as a pending immutable Growth ledger entry; it does not automatically pay it.
+- Growth tables have RLS enabled and no direct anon/authenticated grants. Admin and conversion RPCs are server-role-only. The reward ledger rejects UPDATE/DELETE and uses compensating entries.
+
+### Rollout and unfinished controls
+
+- `marketing_feature_flags.growth_enabled` remains **false** until the latest preview build and end-to-end smoke tests pass.
+- Affiliate commission rules are disabled by default; WENA must explicitly configure and enable rates before activating an Affiliate campaign.
+- No Creator fees or Affiliate commissions are paid automatically. Growth payout request review/transfer controls and final payout reconciliation remain a separate implementation step.
+- Creator usage licences are modelled in the database but the consent/acceptance UI is not yet implemented.
+- The existing admin console is password-header based; Growth deliberately reuses that same admin gate rather than creating a second admin identity. A centrally managed admin permission model should replace that legacy gate in a later security-hardening phase.
+- This feature branch is not merged or deployed to production. Preview/build verification is required before enabling the feature flag.
