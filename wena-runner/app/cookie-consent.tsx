@@ -20,6 +20,18 @@ export default function CookieConsent() {
     window.localStorage.setItem(CONSENT_KEY, value);
     if (value === "referrals") {
       document.cookie = "wena-referral-consent=granted; Path=/; Max-Age=31536000; SameSite=Lax" + (window.location.protocol === "https:" ? "; Secure" : "");
+      const referralCode = new URLSearchParams(window.location.search).get("wena_ref");
+      if (referralCode) {
+        fetch("/api/marketing/attribution/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: referralCode }) })
+          .then((response) => {
+            if (response.ok) {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("wena_ref");
+              window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+            }
+          })
+          .catch(() => undefined);
+      }
     } else {
       document.cookie = "wena-referral-consent=; Path=/; Max-Age=0; SameSite=Lax";
       document.cookie = "wena-referral-visitor=; Path=/; Max-Age=0; SameSite=Lax";
