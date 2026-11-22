@@ -35,6 +35,9 @@ export default function CookieConsent() {
     } else {
       document.cookie = "wena-referral-consent=; Path=/; Max-Age=0; SameSite=Lax";
       document.cookie = "wena-referral-visitor=; Path=/; Max-Age=0; SameSite=Lax";
+      const url = new URL(window.location.href);
+      url.searchParams.delete("wena_ref");
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
     }
     setChoice(value);
   }
