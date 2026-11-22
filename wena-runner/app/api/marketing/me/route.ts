@@ -24,14 +24,15 @@ export async function GET() {
     if (partnerError) throw partnerError;
     if (!partner) return NextResponse.json({ enabled: true, profile: { fullName: profile.full_name, role: profile.role }, partner: null, grants: [], applications: [], links: [], assignments: [], ledger: [] }, { headers: { "Cache-Control": "no-store" } });
 
-    const [grants, applications, links, assignments, ledger] = await Promise.all([
+    const [grants, applications, links, assignments, ledger, eligibleRoles] = await Promise.all([
       supabase.from("marketing_partner_role_grants").select("id,role_key,status,granted_at,terms_version").eq("partner_id", partner.id).order("role_key"),
       supabase.from("marketing_partner_applications").select("id,role_key,status,submitted_at,reviewed_at,review_note").eq("partner_id", partner.id).order("submitted_at", { ascending: false }),
       supabase.from("marketing_tracking_links").select("id,code,destination_path,channel,status,created_at").eq("partner_id", partner.id).order("created_at", { ascending: false }),
       supabase.from("marketing_campaign_assignments").select("id,campaign_id,role_key,status,agreed_fee_zar,terms,invited_at,accepted_at,campaign:marketing_campaigns(name,description,status),deliverables:marketing_creator_deliverables(id,title,brief,due_at,status,submission_note,submission_path)").eq("partner_id", partner.id).order("invited_at", { ascending: false }),
       supabase.from("marketing_reward_ledger").select("id,role_key,entry_type,reward_type,amount_zar,description,created_at").eq("partner_id", partner.id).order("created_at", { ascending: false }).limit(50),
+      supabase.from("marketing_campaign_roles").select("campaign_id").eq("role_key","affiliate"),
     ]);
-    const error = grants.error || applications.error || links.error || assignments.error || ledger.error;
+    const error = grants.error || applications.error || links.error || assignments.error || ledger.error || eligibleRoles.error;
     if (error) throw error;
     return NextResponse.json({
       enabled: true, profile: { fullName: profile.full_name, role: profile.role },
