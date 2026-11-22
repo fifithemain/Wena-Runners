@@ -4,7 +4,7 @@ import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { useState } from "react";
 
-type WorkspaceSection = "jobs" | "messages" | "account" | "earnings" | "leaderboard";
+type WorkspaceSection = "jobs" | "messages" | "account" | "earnings" | "leaderboard" | "growth";
 
 function SignOutButton({ onError }: { onError: (message: string) => void }) {
   const { signOut } = useClerk();
@@ -48,6 +48,7 @@ export default function WorkspaceShell({
     { id: "jobs", label: role === "runner" ? "Runner marketplace" : role === "both" ? "Errand workspace" : "My errands", icon: "▤" },
     { id: "messages", label: "Messages", icon: "◌" },
     { id: "leaderboard", label: "Leaderboard", icon: "🏆" },
+    { id: "growth", label: "Growth", icon: "✦" },
     { id: "account", label: "Account", icon: "◎" },
     ...(role === "runner" || role === "both"
       ? [{ id: "earnings" as const, label: "Runner wallet", icon: "R" }]
