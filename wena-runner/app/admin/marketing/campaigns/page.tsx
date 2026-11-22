@@ -23,6 +23,7 @@ export default function GrowthCampaignAdmin() {
   const [deliverableTitle,setDeliverableTitle]=useState("");
   const [brief,setBrief]=useState("");
   const [dueAt,setDueAt]=useState("");
+  const [reviewNotes,setReviewNotes]=useState<Record<string,string>>({});
 
   async function load() {
     setError("");
@@ -88,6 +89,16 @@ export default function GrowthCampaignAdmin() {
         </section>
 
         <section className="growth-module"><h2>All campaigns</h2>{data.campaigns.length?data.campaigns.map((c:any)=><div className="growth-admin-grant" key={c.id}><div><strong>{c.name}</strong><span>{c.campaign_type} · {c.slug}</span></div><span className={"growth-state "+c.status}>{c.status}</span></div>):<p className="small">No campaigns created yet.</p>}</section>
+        <section className="growth-module"><h2>Creator submissions awaiting review</h2><p className="muted">Approving a deliverable records the agreed creator fee as a pending Growth ledger entry. It does not automatically send money.</p>
+          {data.deliverables?.length?data.deliverables.map((d:any)=>{
+            const assignment=Array.isArray(d.assignment)?d.assignment[0]:d.assignment;
+            const partner=Array.isArray(assignment?.partner)?assignment.partner[0]:assignment?.partner;
+            return <article className="growth-admin-card" key={d.id}><div className="growth-admin-card-head"><div><span className="growth-admin-role">CREATOR SUBMISSION</span><h3>{d.title}</h3><p>{partner?.display_name||"Creator"} · Agreed fee {new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(assignment?.agreed_fee_zar||0))}</p></div><span className={"growth-state "+d.status}>{d.status.replaceAll("_"," ")}</span></div>
+              <p className="muted">{d.brief||"No brief recorded."}</p><p className="small">{d.submission_note||"No submission note."}</p>{d.submission_path&&<a href={d.submission_path} target="_blank" rel="noreferrer">Open creator submission ↗</a>}
+              <div className="growth-admin-actions"><input value={reviewNotes[d.id]||""} onChange={e=>setReviewNotes({...reviewNotes,[d.id]:e.target.value})} placeholder="Feedback or review note"/><button className="btn" disabled={busy} onClick={()=>act({action:"review_deliverable",deliverableId:d.id,status:"approved",note:reviewNotes[d.id]||""})}>Approve & record fee</button><button className="btn ghost" disabled={busy} onClick={()=>act({action:"review_deliverable",deliverableId:d.id,status:"changes_requested",note:reviewNotes[d.id]||"Please make the requested changes"})}>Request changes</button><button className="btn danger" disabled={busy} onClick={()=>act({action:"review_deliverable",deliverableId:d.id,status:"rejected",note:reviewNotes[d.id]||"Deliverable rejected"})}>Reject</button></div>
+            </article>;
+          }):<div className="growth-empty"><strong>No creator submissions waiting</strong><p>Submitted content will appear here for review.</p></div>}
+        </section>
       </>}
     </section>
   </main>;
