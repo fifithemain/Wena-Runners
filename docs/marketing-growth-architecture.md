@@ -86,7 +86,7 @@ Each phase ships behind feature flags and must pass build, authorization, RLS, i
 
 ## Current deployment gate
 
-The connected Supabase project `Wena Runners` (ref `tejocurqovsvrkhgmyza`) was reported as INACTIVE when this architecture was prepared. Do not apply migrations, run database mutations, or deploy marketing features until the project is restored and the live schema/migration history is re-inspected. The current Supabase changelog also notes that new public tables are no longer automatically exposed to the Data API; migrations must explicitly grant only the required server role and keep RLS enabled.
+The connected Supabase project `Wena Runners` (ref `tejocurqovsvrkhgmyza`) is now ACTIVE_HEALTHY. Its live schema and migration history were re-inspected before applying the additive gamification migrations. New tables have RLS enabled, no direct grants for anon/authenticated, and server-role-only access.
 
 
 ## Gamification extension — leaderboard and streak runs
