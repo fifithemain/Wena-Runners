@@ -77,6 +77,18 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
     finally { setBusy(false); }
   }
 
+  async function respondToInvitation(assignmentId: string, status: "accepted"|"declined") {
+    setBusy(true); setError(""); setSuccess("");
+    try {
+      const response=await fetch("/api/marketing/creator/assignments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assignmentId,status})});
+      const result=await response.json();
+      if(!response.ok) throw new Error(result.error||"Could not update invitation.");
+      setSuccess(status==="accepted"?"Creator campaign accepted.":"Creator invitation declined.");
+      await load();
+    } catch(cause) { setError(cause instanceof Error?cause.message:"Could not update invitation."); }
+    finally { setBusy(false); }
+  }
+
   async function submitDeliverable(deliverableId: string) {
     setBusy(true); setError(""); setSuccess("");
     try {
@@ -124,7 +136,7 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
       {activeRoles.has("creator") && <section className="growth-module"><div className="growth-section-head"><div><h2>Creator studio</h2><p>Campaign invitations, creative briefs, submissions, and usage permissions.</p></div><span className="growth-state active">Creator active</span></div>
         {data.assignments.filter(a=>a.role_key==="creator").length ? data.assignments.filter(a=>a.role_key==="creator").map(a=><article className="growth-assignment" key={a.id}>
           <div><strong>{a.campaign?.name || "WENA creator campaign"}</strong><span>{a.campaign?.description || "Campaign brief will appear here."}</span></div>
-          <div className="growth-assignment-meta"><span>{label(a.status)}</span><strong>{money(Number(a.agreed_fee_zar||0))}</strong></div>
+          <div className="growth-assignment-meta"><span>{label(a.status)}</span><strong>{money(Number(a.agreed_fee_zar||0))}</strong></div>{a.status==="invited"&&<div className="growth-grant-actions"><button type="button" className="btn" disabled={busy} onClick={()=>respondToInvitation(a.id,"accepted")}>Accept invitation</button><button type="button" className="btn ghost" disabled={busy} onClick={()=>respondToInvitation(a.id,"declined")}>Decline</button></div>}
           {(a.deliverables||[]).map((d:any)=><div className="growth-deliverable" key={d.id}><div><strong>{d.title}</strong><span>{d.brief||"No additional brief."}{d.due_at?" · Due "+new Date(d.due_at).toLocaleDateString("en-ZA"):""}</span><small>{label(d.status)}</small></div>
             {["not_started","changes_requested"].includes(d.status)&&<div className="growth-deliverable-form"><textarea rows={2} value={deliverableNotes[d.id]||""} onChange={e=>setDeliverableNotes({...deliverableNotes,[d.id]:e.target.value})} placeholder="Add a note about your submission"/><input type="url" value={deliverableUrls[d.id]||""} onChange={e=>setDeliverableUrls({...deliverableUrls,[d.id]:e.target.value})} placeholder="https:// link to your content (optional)"/><button type="button" className="btn" disabled={busy||(!deliverableNotes[d.id]?.trim()&&!deliverableUrls[d.id]?.trim())} onClick={()=>submitDeliverable(d.id)}>Submit for review</button></div>}
             {d.submission_path&&<a href={d.submission_path} target="_blank" rel="noreferrer">View submitted content ↗</a>}
