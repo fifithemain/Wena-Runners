@@ -72,7 +72,7 @@ export async function POST(request:Request) {
       const campaignId=String(body.campaignId||"");
       const calculation=body.calculation==="fixed"?"fixed":"percentage";
       const amount=Number(body.amount), cap=body.capAmount===""||body.capAmount==null?null:Number(body.capAmount);
-      if(!campaignId||!Number.isFinite(amount)||amount<=0||amount>100000|| (cap!==null&&(!Number.isFinite(cap)||cap<=0))) return fail("Enter a valid positive reward amount and optional cap.");
+      if(!campaignId||!Number.isFinite(amount)||amount<=0||amount>(calculation==="percentage"?100:100000)|| (cap!==null&&(!Number.isFinite(cap)||cap<=0))) return fail("Enter a valid positive reward amount and optional cap.");
       const {data:eligible}=await supabase.from("marketing_campaign_roles").select("campaign_id").eq("campaign_id",campaignId).eq("role_key","affiliate").maybeSingle();
       if(!eligible) return fail("This campaign is not configured for Affiliates.",409);
       const {data,error}=await supabase.from("marketing_reward_rules").upsert({
