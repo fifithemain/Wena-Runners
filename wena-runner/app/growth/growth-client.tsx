@@ -26,6 +26,8 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
   const [busy,setBusy] = useState(false);
   const [channel,setChannel] = useState("whatsapp");
   const [destination,setDestination] = useState("/");
+  const [deliverableNotes,setDeliverableNotes] = useState<Record<string,string>>({});
+  const [deliverableUrls,setDeliverableUrls] = useState<Record<string,string>>({});
 
   async function load() {
     setError("");
@@ -75,6 +77,18 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
     finally { setBusy(false); }
   }
 
+  async function submitDeliverable(deliverableId: string) {
+    setBusy(true); setError(""); setSuccess("");
+    try {
+      const response = await fetch("/api/marketing/creator/deliverables",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({deliverableId,note:deliverableNotes[deliverableId]||"",url:deliverableUrls[deliverableId]||""})});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Submission failed.");
+      setSuccess("Your creator deliverable has been submitted for review.");
+      await load();
+    } catch(cause) { setError(cause instanceof Error?cause.message:"Submission failed."); }
+    finally { setBusy(false); }
+  }
+
   if (loading) return <WorkspaceShell active="growth" role={role} name={name} signedIn={signedIn}><section className="workspace-page"><div className="growth-loading"><span className="growth-spinner"/>Preparing your Growth workspace…</div></section></WorkspaceShell>;
   if (data && !data.enabled) return <WorkspaceShell active="growth" role={role} name={name} signedIn={signedIn}><section className="workspace-page"><header className="pagehead"><p className="growth-eyebrow">WENA GROWTH</p><h1>Grow with WENA.</h1><p className="muted">One WENA account. More ways to earn, create, and build your community.</p></header><div className="growth-coming panel"><span className="growth-mark">✦</span><h2>Growth is getting ready</h2><p>{data.message}</p><p className="small">Your Customer and Runner access is unaffected.</p></div></section></WorkspaceShell>;
   if (!data) return <WorkspaceShell active="growth" role={role} name={name} signedIn={signedIn}><section className="workspace-page"><p className="error">{error || "Could not load your Growth workspace."}</p><button className="btn" onClick={load}>Try again</button></section></WorkspaceShell>;
@@ -108,7 +122,14 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
       </section>}
 
       {activeRoles.has("creator") && <section className="growth-module"><div className="growth-section-head"><div><h2>Creator studio</h2><p>Campaign invitations, creative briefs, submissions, and usage permissions.</p></div><span className="growth-state active">Creator active</span></div>
-        {data.assignments.filter(a=>a.role_key==="creator").length ? data.assignments.filter(a=>a.role_key==="creator").map(a=><article className="growth-assignment" key={a.id}><div><strong>{a.campaign?.name || "WENA creator campaign"}</strong><span>{a.campaign?.description || "Campaign brief will appear here."}</span></div><div className="growth-assignment-meta"><span>{label(a.status)}</span><strong>{money(Number(a.agreed_fee_zar||0))}</strong></div></article>) : <div className="growth-empty"><strong>No creator briefs yet</strong><p>When WENA invites you to a campaign, the brief, deliverables, deadline, and agreed fee will appear here.</p></div>}
+        {data.assignments.filter(a=>a.role_key==="creator").length ? data.assignments.filter(a=>a.role_key==="creator").map(a=><article className="growth-assignment" key={a.id}>
+          <div><strong>{a.campaign?.name || "WENA creator campaign"}</strong><span>{a.campaign?.description || "Campaign brief will appear here."}</span></div>
+          <div className="growth-assignment-meta"><span>{label(a.status)}</span><strong>{money(Number(a.agreed_fee_zar||0))}</strong></div>
+          {(a.deliverables||[]).map((d:any)=><div className="growth-deliverable" key={d.id}><div><strong>{d.title}</strong><span>{d.brief||"No additional brief."}{d.due_at?" · Due "+new Date(d.due_at).toLocaleDateString("en-ZA"):""}</span><small>{label(d.status)}</small></div>
+            {["not_started","changes_requested"].includes(d.status)&&<div className="growth-deliverable-form"><textarea rows={2} value={deliverableNotes[d.id]||""} onChange={e=>setDeliverableNotes({...deliverableNotes,[d.id]:e.target.value})} placeholder="Add a note about your submission"/><input type="url" value={deliverableUrls[d.id]||""} onChange={e=>setDeliverableUrls({...deliverableUrls,[d.id]:e.target.value})} placeholder="https:// link to your content (optional)"/><button type="button" className="btn" disabled={busy||(!deliverableNotes[d.id]?.trim()&&!deliverableUrls[d.id]?.trim())} onClick={()=>submitDeliverable(d.id)}>Submit for review</button></div>}
+            {d.submission_path&&<a href={d.submission_path} target="_blank" rel="noreferrer">View submitted content ↗</a>}
+          </div>)}
+        </article>) : <div className="growth-empty"><strong>No creator briefs yet</strong><p>When WENA invites you to a campaign, the brief, deliverables, deadline, and agreed fee will appear here.</p></div>}
       </section>}
 
       {data.ledger.length>0 && <section className="growth-module"><div className="growth-section-head"><div><h2>Growth rewards</h2><p>Affiliate commissions and Creator fees are shown separately from Runner earnings.</p></div></div><div className="growth-ledger">{data.ledger.map(entry=><div className="growth-ledger-row" key={entry.id}><div><strong>{entry.reward_type.replaceAll("_"," ")} · {roleNames[entry.role_key]}</strong><span>{entry.description || label(entry.entry_type)} · {new Date(entry.created_at).toLocaleDateString("en-ZA")}</span></div><div><strong>{money(entry.amount_zar)}</strong><span>{label(entry.entry_type)}</span></div></div>)}</div></section>}
