@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       supabase.from("runner_streaks").select("current_streak,longest_streak,last_activity_date").eq("runner_id", profile.id).maybeSingle(),
       supabase.from("runner_streak_milestone_rules").select("milestone_days,reward_kind,reward_amount,reward_label,enabled").eq("enabled", true).order("milestone_days"),
       supabase.from("runner_streak_rewards").select("id,milestone_days,reward_kind,reward_amount,reward_label,status,earned_at").eq("runner_id", profile.id).order("earned_at", { ascending: false }).limit(20),
-      supabase.from("runner_completed_job_events").select("completed_local_date").eq("runner_id", profile.id).gte("completed_local_date", (() => { const d = new Date(); d.setDate(d.getDate() - 34); return localDay(d); })()),
+      supabase.from("runner_completed_job_events").select("completed_local_date").eq("runner_id", profile.id).gte("completed_local_date", shiftLocalDay(-34)),
     ]);
 
     const failure = settingsError || rankError || streakError || rulesError || rewardsError || eventsError;
