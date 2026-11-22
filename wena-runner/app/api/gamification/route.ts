@@ -23,6 +23,12 @@ function localDay(date = new Date()) {
   return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
+function shiftLocalDay(offset: number) {
+  const date = new Date(`${localDay()}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
 export async function GET(request: Request) {
   try {
     const profile = await getCurrentProfile();
@@ -62,9 +68,7 @@ export async function GET(request: Request) {
     const me = leaderboard.find((row: any) => row.isCurrentUser) || null;
     const above = me ? leaderboard.find((row: any) => row.rank === me.rank - 1) || null : null;
     const today = localDay();
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = localDay(yesterdayDate);
+    const yesterday = shiftLocalDay(-1);
     const lastDay = streak?.last_activity_date || null;
     const storedStreak = Number(streak?.current_streak || 0);
     const currentStreak = lastDay === today || lastDay === yesterday ? storedStreak : 0;
