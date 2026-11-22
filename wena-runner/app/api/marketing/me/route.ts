@@ -34,8 +34,11 @@ export async function GET() {
     ]);
     const error = grants.error || applications.error || links.error || assignments.error || ledger.error || eligibleRoles.error;
     if (error) throw error;
+    const campaignIds = (eligibleRoles.data || []).map((item: any) => item.campaign_id);
+    const { data: campaigns, error: campaignsError } = campaignIds.length ? await supabase.from("marketing_campaigns").select("id,name,description,status").in("id",campaignIds).eq("status","active") : { data: [], error: null };
+    if (campaignsError) throw campaignsError;
     return NextResponse.json({
-      enabled: true, profile: { fullName: profile.full_name, role: profile.role },
+      enabled: true, campaigns: campaigns || [], profile: { fullName: profile.full_name, role: profile.role },
       partner, grants: grants.data || [], applications: applications.data || [],
       links: links.data || [], assignments: assignments.data || [], ledger: ledger.data || [],
     }, { headers: { "Cache-Control": "no-store, max-age=0" } });
