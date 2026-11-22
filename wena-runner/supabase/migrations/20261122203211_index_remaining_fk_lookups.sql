@@ -1,0 +1,2 @@
+create index if not exists job_messages_sender_id_idx on public.job_messages(sender_id);
+create index if not exists runner_streak_rewards_milestone_days_idx on public.runner_streak_rewards(milestone_days);
