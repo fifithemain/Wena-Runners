@@ -26,15 +26,21 @@ export async function POST(request: Request) {
     if (!partner) return fail("Growth profile not found.", 403);
     const { data: grant } = await supabase.from("marketing_partner_role_grants").select("id").eq("partner_id", partner.id).eq("role_key", "creator").eq("status", "active").maybeSingle();
     if (!grant) return fail("Your Creator access is not active.", 403);
-    const { data: assignment } = await supabase.from("marketing_campaign_assignments").select("id").eq("partner_id", partner.id).eq("role_key", "creator").in("status", ["accepted","in_progress"]).maybeSingle();
-    if (!assignment) return fail("You have no active creator assignment.", 409);
+    const { data: deliverable, error: lookupError } = await supabase.from("marketing_creator_deliverables")
+      .select("id,assignment:marketing_campaign_assignments!inner(partner_id,role_key,status)")
+      .eq("id", body.deliverableId).maybeSingle();
+    if (lookupError) throw lookupError;
+    const assignment = Array.isArray(deliverable?.assignment) ? deliverable.assignment[0] : deliverable?.assignment;
+    if (!deliverable || !assignment || assignment.partner_id !== partner.id || assignment.role_key !== "creator" || !["accepted","in_progress"].includes(assignment.status)) {
+      return fail("This deliverable is not available for submission.", 403);
+    }
     const { data, error } = await supabase.from("marketing_creator_deliverables").update({
-      submission_note: [note,url].filter(Boolean).join("\\n").slice(0,2000),
+      submission_note: [note,url].filter(Boolean).join("\n").slice(0,2000),
       submission_path: url || null, status: "submitted", submitted_at: new Date().toISOString(),
-    }).eq("id", body.deliverableId).eq("assignment_id", assignment.id).in("status", ["not_started","changes_requested"])
+    }).eq("id", body.deliverableId).in("status", ["not_started","changes_requested"])
       .select("id,status,submitted_at").maybeSingle();
     if (error) throw error;
-    if (!data) return fail("This deliverable is not available for submission.", 409);
+    if (!data) return fail("This deliverable has already been submitted or is no longer available.", 409);
     return NextResponse.json({ deliverable: data });
   } catch (cause) {
     console.error("Creator submission failed:", cause);
