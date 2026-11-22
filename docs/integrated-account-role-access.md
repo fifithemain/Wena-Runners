@@ -309,3 +309,6 @@ The first integrated Growth slice has been implemented on this feature branch:
 - Creator usage licences are modelled in the database but the consent/acceptance UI is not yet implemented.
 - The existing admin console is password-header based; Growth deliberately reuses that same admin gate rather than creating a second admin identity. A centrally managed admin permission model should replace that legacy gate in a later security-hardening phase.
 - This feature branch is not merged or deployed to production. Preview/build verification is required before enabling the feature flag.
+
+
+Referral consent handling note: if a first-time visitor arrives before choosing referral measurement, the short referral code remains in the page URL only until they make a cookie choice. The code is recorded as an attribution only after explicit referral consent; declining or choosing analytics-only removes it from the URL without creating an attribution row.
