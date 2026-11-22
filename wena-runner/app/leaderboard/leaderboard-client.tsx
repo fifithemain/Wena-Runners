@@ -21,16 +21,11 @@ type Payload = {
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 function shiftLocalDay(offset: number) {
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });
-  const date = new Date(`${today}T00:00:00Z`);
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const part = (name: string) => parts.find((item) => item.type === name)?.value || "";
+  const date = new Date(`${part("year")}-${part("month")}-${part("day")}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + offset);
   return date.toISOString().slice(0, 10);
-}
-
-function dateKey(date: Date) {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
-  const part = (name: string) => parts.find((item) => item.type === name)?.value || "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 export default function LeaderboardClient({ name, role, signedIn }: { name: string; role: string; signedIn: boolean }) {
