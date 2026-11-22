@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const { data: grant } = await supabase.from("marketing_partner_role_grants").select("id").eq("partner_id", partner.id).eq("role_key", "affiliate").eq("status", "active").maybeSingle();
     if (!grant) return fail("Your Affiliate access is not active.", 403);
     const campaignId = typeof body.campaignId === "string" && body.campaignId ? body.campaignId : null;
+    if (!campaignId) return fail("Choose an active Affiliate campaign before creating a referral link.");
     if (campaignId) {
       const { data: campaignRole } = await supabase.from("marketing_campaign_roles").select("campaign_id").eq("campaign_id",campaignId).eq("role_key","affiliate").maybeSingle();
       const { data: campaign } = await supabase.from("marketing_campaigns").select("id,status").eq("id",campaignId).eq("status","active").maybeSingle();
