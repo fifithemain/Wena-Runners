@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       .select("id,status,submitted_at").maybeSingle();
     if (error) throw error;
     if (!data) return fail("This deliverable has already been submitted or is no longer available.", 409);
+    await supabase.from("marketing_audit_log").insert({actor_profile_id:profile.id,action:"creator_deliverable_submitted",target_type:"marketing_creator_deliverable",target_id:data.id,metadata:{assignment_id:assignment.id}});
     return NextResponse.json({ deliverable: data });
   } catch (cause) {
     console.error("Creator submission failed:", cause);
