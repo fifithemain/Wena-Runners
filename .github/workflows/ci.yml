@@ -16,4 +16,15 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Report dependency security advisories
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const audit = require('./npm-audit.json');
+          console.log('Dependency audit summary:', JSON.stringify(audit.metadata?.vulnerabilities || {}));
+          for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+            const advisories = (item.via || []).filter((entry) => typeof entry === 'object').map((entry) => entry.title).filter(Boolean);
+            console.log(name + ': ' + item.severity + ' | range: ' + item.range + ' | ' + advisories.join('; '));
+          }
+          NODE
       - run: npm run build
