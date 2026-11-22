@@ -22,6 +22,8 @@ export async function POST(request: Request) {
     if (!destination.startsWith("/") || destination.startsWith("//") || destination.includes("\\") || destination.length > 300) return fail("Choose a valid WENA destination path.");
     if (!["direct","whatsapp","instagram","tiktok","facebook","youtube","other"].includes(channel)) return fail("Choose a valid channel.");
     const supabase = db();
+    const { data: feature } = await supabase.from("marketing_feature_flags").select("growth_enabled").eq("id",true).maybeSingle();
+    if (!feature?.growth_enabled) return fail("WENA Growth is temporarily unavailable.",503);
     const { data: partner } = await supabase.from("marketing_partners").select("id").eq("profile_id", profile.id).eq("status", "active").maybeSingle();
     if (!partner) return fail("Apply for and activate your Affiliate role first.", 403);
     const { data: grant } = await supabase.from("marketing_partner_role_grants").select("id").eq("partner_id", partner.id).eq("role_key", "affiliate").eq("status", "active").maybeSingle();
