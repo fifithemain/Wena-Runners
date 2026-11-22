@@ -5,13 +5,14 @@ import { getCurrentProfile } from "@/lib/current-profile";
 const db = () =>
   createClient(
     process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "",
     { auth: { persistSession: false } },
   );
 const fail = (message: string, status = 400) => NextResponse.json({ error: message }, { status });
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const profile = await getCurrentProfile();
     if (!profile) return fail("Sign in first.", 401);
 
@@ -19,7 +20,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     const { data: job } = await supabase
       .from("jobs")
       .select("customer_id,runner_id,status")
-      .eq("id", params.id)
+      .eq("id", id)
       .maybeSingle();
     if (!job || ![job.customer_id, job.runner_id].includes(profile.id) || !job.runner_id) {
       return fail("Chat is only available to errand participants after a Runner is assigned.", 403);
@@ -28,7 +29,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     const { data: messages, error } = await supabase
       .from("job_messages")
       .select("id,job_id,sender_id,content,created_at")
-      .eq("job_id", params.id)
+      .eq("job_id", id)
       .order("created_at", { ascending: true })
       .limit(100);
     if (error) return fail(error.message, 500);
@@ -40,8 +41,9 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   }
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const profile = await getCurrentProfile();
     if (!profile) return fail("Sign in first.", 401);
 
@@ -61,7 +63,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     const { data, error } = await supabase
       .from("job_messages")
-      .insert({ job_id: params.id, sender_id: profile.id, content })
+      .insert({ job_id: id, sender_id: profile.id, content })
       .select("id")
       .single();
     if (error) return fail(error.message, 500);
