@@ -2,7 +2,7 @@
 
 import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type WorkspaceSection = "jobs" | "messages" | "account" | "earnings" | "leaderboard" | "growth";
 
@@ -35,6 +35,7 @@ export default function WorkspaceShell({
   children: React.ReactNode;
 }) {
   const [error, setError] = useState("");
+  useEffect(() => { fetch("/api/marketing/attribution/claim", { method: "POST" }).catch(() => undefined); }, []);
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const hasSession = signedIn ?? Boolean(name || role);
   const displayName = name || "Your account";
