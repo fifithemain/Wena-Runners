@@ -15,13 +15,14 @@ export async function GET(request: Request, context: { params: { code: string } 
   const fallback = new URL("/",request.url);
   try {
     const supabase=db();
+    const {data:feature}=await supabase.from("marketing_feature_flags").select("growth_enabled").eq("id",true).maybeSingle();
     const {data:link,error}=await supabase.from("marketing_tracking_links")
       .select("id,partner_id,destination_path,channel,status").eq("code",code).eq("status","active").maybeSingle();
     if(error||!link) return NextResponse.redirect(fallback);
     const destination = typeof link.destination_path==="string" && link.destination_path.startsWith("/") && !link.destination_path.startsWith("//") ? link.destination_path : "/";
     const response=NextResponse.redirect(new URL(destination,request.url));
     const jar=cookies();
-    if(jar.get("wena-referral-consent")?.value==="granted") {
+    if(feature?.growth_enabled && jar.get("wena-referral-consent")?.value==="granted") {
       const visitor=jar.get("wena-referral-visitor")?.value || randomUUID();
       await supabase.from("marketing_attributions").insert({
         tracking_link_id:link.id,partner_id:link.partner_id,anonymous_visitor_key:visitor,
