@@ -26,7 +26,7 @@ function dateKey(date: Date) {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-export default function LeaderboardPage() {
+export default function LeaderboardClient({ name, role, signedIn }: { name: string; role: string; signedIn: boolean }) {
   const [period, setPeriod] = useState<Period>("all_time");
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
