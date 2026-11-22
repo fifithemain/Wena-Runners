@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default async function GrowthPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
-  return <GrowthClient name={profile.full_name || profile.email} role={profile.role} signedIn />;
+  return <GrowthClient name={profile.full_name || profile.email || "Your account"} role={profile.role} signedIn />;
 }
