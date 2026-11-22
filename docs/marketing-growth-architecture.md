@@ -87,3 +87,40 @@ Each phase ships behind feature flags and must pass build, authorization, RLS, i
 ## Current deployment gate
 
 The connected Supabase project `Wena Runners` (ref `tejocurqovsvrkhgmyza`) was reported as INACTIVE when this architecture was prepared. Do not apply migrations, run database mutations, or deploy marketing features until the project is restored and the live schema/migration history is re-inspected. The current Supabase changelog also notes that new public tables are no longer automatically exposed to the Data API; migrations must explicitly grant only the required server role and keep RLS enabled.
+
+
+## Gamification extension — leaderboard and streak runs
+
+The first user-facing growth loop is a Runner leaderboard and streak system, integrated into the existing authenticated workspace at `/leaderboard`.
+
+### Leaderboard rules
+- Weekly, monthly, and all-time boards rank Runner earnings from persisted jobs where `status='completed'`, `payment_status='paid'`, and `completed_at` is present.
+- Earnings use `final_budget` (falling back to `requested_budget`) to match the existing Runner earnings calculation; service fees are not included.
+- Ranking is deterministic: earnings descending, completed errand count descending, display name, then profile ID.
+- The API returns the top ten, the signed-in Runner's own rank even outside the top ten, and the immediately preceding rank to calculate the amount needed to move up.
+- Public display names are abbreviated to first name plus surname initial. Private profile IDs and full names are not exposed.
+- The page refreshes every 20 seconds and on tab focus. It uses server-side Clerk profile resolution and the service-role database client; no browser-side Supabase access is added.
+
+### Streak rules and rewards
+- A qualifying day is a South African calendar day (`Africa/Johannesburg`) on which the Runner completes at least one paid errand.
+- Multiple completed errands on one day count as one streak day.
+- The streak is incremented only by a database trigger on a persisted transition into the completed + paid state. The qualifying event table has a unique job ID for idempotency.
+- Milestones are seeded at 3, 7, 14, 30, 60 and 100 days. Initial rewards are badges only. Cash rewards are configurable in the milestone rules table but remain zero/inactive until WENA approves actual prize amounts and payout handling.
+- Streak rewards are separate from Runner wallet payouts and affiliate commissions.
+- Missing a full calendar day breaks the active streak; the longest streak is retained. Each milestone is granted once per Runner account.
+
+### Database implementation
+- `runner_gamification_settings` — feature kill switch, default OFF.
+- `runner_streak_milestone_rules` — configurable milestone reward catalogue.
+- `runner_streaks` — current/best streak state.
+- `runner_completed_job_events` — idempotent qualifying job/day events.
+- `runner_streak_rewards` — earned badge/cash reward records.
+- `get_runner_leaderboard(period, profile_id)` — server-only ranking RPC.
+- `record_runner_completed_job_streak()` — server-only trigger function.
+
+Migrations applied to the active Supabase database and committed to the feature branch:
+- `20261122185528_runner_leaderboard_streak_rewards`
+- `20261122185542_leaderboard_include_neighbour_rank`
+
+### Rollout gate
+The gamification feature flag remains OFF until the feature branch has passed a production build and preview verification. Enabling the trigger before the app code is deployed would begin recording streak events without a visible user experience, so activation must happen after deployment validation.
