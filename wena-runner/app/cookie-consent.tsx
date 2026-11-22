@@ -9,12 +9,21 @@ type Choice = "accepted" | "essential" | "referrals";
 export default function CookieConsent() {
   const [choice, setChoice] = useState<Choice | null>(null);
   const [ready, setReady] = useState(false);
+  const [pendingReferral, setPendingReferral] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(CONSENT_KEY);
     setChoice(stored === "essential" ? "essential" : stored === "referrals" ? "referrals" : stored === "accepted" ? "accepted" : null);
+    setPendingReferral(new URLSearchParams(window.location.search).has("wena_ref"));
     setReady(true);
   }, []);
+
+  function clearReferralQuery() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("wena_ref");
+    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    setPendingReferral(false);
+  }
 
   function choose(value: Choice) {
     window.localStorage.setItem(CONSENT_KEY, value);
@@ -23,21 +32,15 @@ export default function CookieConsent() {
       const referralCode = new URLSearchParams(window.location.search).get("wena_ref");
       if (referralCode) {
         fetch("/api/marketing/attribution/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: referralCode }) })
-          .then((response) => {
-            if (response.ok) {
-              const url = new URL(window.location.href);
-              url.searchParams.delete("wena_ref");
-              window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-            }
-          })
+          .then((response) => { if (response.ok) clearReferralQuery(); })
           .catch(() => undefined);
+      } else {
+        setPendingReferral(false);
       }
     } else {
       document.cookie = "wena-referral-consent=; Path=/; Max-Age=0; SameSite=Lax";
       document.cookie = "wena-referral-visitor=; Path=/; Max-Age=0; SameSite=Lax";
-      const url = new URL(window.location.href);
-      url.searchParams.delete("wena_ref");
-      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      clearReferralQuery();
     }
     setChoice(value);
   }
@@ -46,7 +49,7 @@ export default function CookieConsent() {
   return (
     <>
       {choice !== null && choice !== "essential" && <Analytics />}
-      {choice === null && (
+      {(choice === null || pendingReferral) && (
         <aside aria-label="Cookie preferences" style={{ position: "fixed", zIndex: 100, inset: "auto 16px 16px", margin: "auto", maxWidth: 800, padding: 20, border: "1px solid #dce9e3", borderRadius: 16, background: "#fff", color: "#102f38", boxShadow: "0 14px 40px rgba(16,47,56,.2)" }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 18 }}>
             <div style={{ flex: "1 1 340px" }}>
