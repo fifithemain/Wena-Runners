@@ -10,8 +10,9 @@ function db() {
   if (!url || !key) throw new Error("Referral service is unavailable.");
   return createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
 }
-export async function GET(request: Request, context: { params: { code: string } }) {
-  const code = String(context.params.code || "").toUpperCase().replace(/[^A-F0-9]/g,"").slice(0,12);
+export async function GET(request: Request, context: { params: Promise<{ code: string }> }) {
+  const { code: rawCode } = await context.params;
+  const code = String(rawCode || "").toUpperCase().replace(/[^A-F0-9]/g,"").slice(0,12);
   const fallback = new URL("/",request.url);
   try {
     const supabase=db();
@@ -20,7 +21,7 @@ export async function GET(request: Request, context: { params: { code: string } 
       .select("id,partner_id,destination_path,channel,status").eq("code",code).eq("status","active").maybeSingle();
     if(error||!link) return NextResponse.redirect(fallback);
     const destination = typeof link.destination_path==="string" && link.destination_path.startsWith("/") && !link.destination_path.startsWith("//") ? link.destination_path : "/";
-    const jar=cookies();
+    const jar=await cookies();
     const consented=jar.get("wena-referral-consent")?.value==="granted";
     const response=NextResponse.redirect(new URL(destination,request.url));
     if(consented && feature?.growth_enabled) {
