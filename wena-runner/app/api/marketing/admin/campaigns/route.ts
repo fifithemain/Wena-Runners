@@ -21,15 +21,16 @@ export async function GET(request:Request) {
   if(!authorized(request)) return fail("Admin password is incorrect.",401);
   try {
     const supabase=db();
-    const [campaigns,grants,partners,rules]=await Promise.all([
+    const [campaigns,grants,partners,rules,deliverables]=await Promise.all([
       supabase.from("marketing_campaigns").select("id,name,slug,description,campaign_type,status,starts_at,ends_at,budget_zar,created_at").order("created_at",{ascending:false}),
       supabase.from("marketing_partner_role_grants").select("id,partner_id,role_key,status").eq("status","active"),
       supabase.from("marketing_partners").select("id,display_name,profile_id").eq("status","active"),
       supabase.from("marketing_reward_rules").select("id,campaign_id,role_key,reward_type,calculation,amount,cap_amount,enabled"),
+      supabase.from("marketing_creator_deliverables").select("id,title,brief,status,submission_path,submission_note,submitted_at,assignment:marketing_campaign_assignments!inner(id,partner_id,campaign_id,agreed_fee_zar,partner:marketing_partners(display_name))").in("status",["submitted","changes_requested"]).order("submitted_at",{ascending:true}),
     ]);
-    const error=campaigns.error||grants.error||partners.error||rules.error;
+    const error=campaigns.error||grants.error||partners.error||rules.error||deliverables.error;
     if(error) throw error;
-    return NextResponse.json({campaigns:campaigns.data||[],grants:grants.data||[],partners:partners.data||[],rules:rules.data||[]},{headers:{"Cache-Control":"no-store"}});
+    return NextResponse.json({campaigns:campaigns.data||[],grants:grants.data||[],partners:partners.data||[],rules:rules.data||[],deliverables:deliverables.data||[]},{headers:{"Cache-Control":"no-store"}});
   } catch(cause) {
     console.error("Growth campaign load failed:",cause);
     return fail("Could not load campaigns.",503);
@@ -41,6 +42,18 @@ export async function POST(request:Request) {
   try {
     const body=await request.json().catch(()=>({}));
     const supabase=db();
+    if(body.action==="review_deliverable") {
+      const deliverableId=String(body.deliverableId||"");
+      const status=body.status;
+      if(!deliverableId||!["approved","changes_requested","rejected"].includes(status)) return fail("Invalid deliverable review.");
+      const {data,error}=await supabase.rpc("admin_review_creator_deliverable",{
+        p_deliverable_id:deliverableId,p_status:status,
+        p_review_note:typeof body.note==="string"?body.note.trim().slice(0,1000):"",
+        p_actor_profile_id:null,
+      });
+      if(error) return fail(error.message,409);
+      return NextResponse.json({result:data});
+    }
     if(body.action==="create_campaign") {
       const name=typeof body.name==="string"?body.name.trim().slice(0,100):"";
       const description=typeof body.description==="string"?body.description.trim().slice(0,2000):"";
