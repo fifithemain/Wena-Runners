@@ -20,7 +20,14 @@ type Payload = {
 
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
-function shiftLocalDay(offset: number) {\n  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });\n  const date = new Date(`${today}T00:00:00Z`);\n  date.setUTCDate(date.getUTCDate() + offset);\n  return date.toISOString().slice(0, 10);\n}\n\nfunction dateKey(date: Date) {
+function shiftLocalDay(offset: number) {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });
+  const date = new Date(`${today}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
+function dateKey(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
   const part = (name: string) => parts.find((item) => item.type === name)?.value || "";
   return `${part("year")}-${part("month")}-${part("day")}`;
@@ -59,13 +66,11 @@ export default function LeaderboardClient({ name, role, signedIn }: { name: stri
   }, [load]);
 
   const days = useMemo(() => {
-    const today = new Date();
     const result: { date: string; label: string; active: boolean; today: boolean }[] = [];
     const activeDates = new Set(data?.streak?.activityDates || []);
     for (let offset = 13; offset >= 0; offset--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - offset);
-      const key = dateKey(date);
+      const key = shiftLocalDay(-offset);
+      const date = new Date(`${key}T12:00:00+02:00`);
       result.push({
         date: key,
         label: new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", weekday: "short" }).format(date).slice(0, 1),
