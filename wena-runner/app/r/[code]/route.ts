@@ -20,15 +20,20 @@ export async function GET(request: Request, context: { params: { code: string } 
       .select("id,partner_id,destination_path,channel,status").eq("code",code).eq("status","active").maybeSingle();
     if(error||!link) return NextResponse.redirect(fallback);
     const destination = typeof link.destination_path==="string" && link.destination_path.startsWith("/") && !link.destination_path.startsWith("//") ? link.destination_path : "/";
-    const response=NextResponse.redirect(new URL(destination,request.url));
     const jar=cookies();
-    if(feature?.growth_enabled && jar.get("wena-referral-consent")?.value==="granted") {
+    const consented=jar.get("wena-referral-consent")?.value==="granted";
+    const response=NextResponse.redirect(new URL(destination,request.url));
+    if(consented && feature?.growth_enabled) {
       const visitor=jar.get("wena-referral-visitor")?.value || randomUUID();
       await supabase.from("marketing_attributions").insert({
         tracking_link_id:link.id,partner_id:link.partner_id,anonymous_visitor_key:visitor,
         source:"partner_link",medium:link.channel,consented:true,
       });
       response.cookies.set("wena-referral-visitor",visitor,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*30});
+    } else if (!consented && feature?.growth_enabled) {
+      const target=new URL(destination,request.url);
+      target.searchParams.set("wena_ref",code);
+      return NextResponse.redirect(target);
     }
     return response;
   } catch (cause) {
