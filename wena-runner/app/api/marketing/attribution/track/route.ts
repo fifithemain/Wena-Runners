@@ -13,7 +13,8 @@ function db() {
 }
 export async function POST(request:Request) {
   try {
-    if(cookies().get("wena-referral-consent")?.value!=="granted")
+    const jar=await cookies();
+    if(jar.get("wena-referral-consent")?.value!=="granted")
       return NextResponse.json({error:"Referral measurement consent is required."},{status:403});
     const body=await request.json().catch(()=>({}));
     const code=typeof body.code==="string"?body.code.toUpperCase().replace(/[^A-F0-9]/g,"").slice(0,12):"";
@@ -27,7 +28,6 @@ export async function POST(request:Request) {
       const {data:campaign}=await supabase.from("marketing_campaigns").select("id,status").eq("id",link.campaign_id).eq("status","active").maybeSingle();
       if(!campaign) return NextResponse.json({error:"Campaign is no longer active."},{status:404});
     }
-    const jar=cookies();
     const visitor=jar.get("wena-referral-visitor")?.value||randomUUID();
     const profile=await getCurrentProfile();
     const {error}=await supabase.from("marketing_attributions").insert({
