@@ -61,6 +61,7 @@ export default function Admin() {
       <nav className="shell nav">
         <Link href="/" className="brand" aria-label="WENA Runners home"><span className="brand-symbol" aria-hidden="true">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link>
         <Link href="/jobs">Errand board</Link>
+        <Link href="/admin/marketing">Growth programme</Link>
       </nav>
       <section className="shell">
         <header className="pagehead">
