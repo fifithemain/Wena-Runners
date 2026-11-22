@@ -6,7 +6,7 @@ import WorkspaceShell from "../workspace-shell";
 type Payload = {
   enabled: boolean; message?: string; profile?: { fullName: string; role: string };
   partner?: { id: string; display_name: string; status: string } | null;
-  grants: any[]; applications: any[]; links: any[]; assignments: any[]; ledger: any[];
+  grants: any[]; applications: any[]; links: any[]; assignments: any[]; ledger: any[]; campaigns: any[];
 };
 const roleNames: Record<string,string> = { affiliate: "Affiliate", creator: "Creator" };
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(Number(value || 0));
@@ -26,6 +26,7 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
   const [busy,setBusy] = useState(false);
   const [channel,setChannel] = useState("whatsapp");
   const [destination,setDestination] = useState("/");
+  const [campaignId,setCampaignId] = useState("");
   const [deliverableNotes,setDeliverableNotes] = useState<Record<string,string>>({});
   const [deliverableUrls,setDeliverableUrls] = useState<Record<string,string>>({});
 
@@ -69,7 +70,7 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
   async function createLink(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setSuccess("");
     try {
-      const response = await fetch("/api/marketing/affiliate/links",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({channel,destinationPath:destination})});
+      const response = await fetch("/api/marketing/affiliate/links",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({channel,destinationPath:destination,campaignId:campaignId||null})});
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not create link.");
       setSuccess("Your referral link is ready."); await load();
@@ -127,7 +128,7 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
         <div className="growth-section-head"><div><h2>Affiliate links</h2><p>Create a unique WENA referral link for each channel.</p></div><span className="growth-state active">Affiliate active</span></div>
         <form className="growth-link-form" onSubmit={createLink}>
           <label>Channel<select value={channel} onChange={e=>setChannel(e.target.value)}><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="facebook">Facebook</option><option value="youtube">YouTube</option><option value="direct">Direct</option><option value="other">Other</option></select></label>
-          <label>WENA destination<select value={destination} onChange={e=>setDestination(e.target.value)}><option value="/">WENA home</option><option value="/jobs">Errand marketplace</option><option value="/signup">Create a WENA account</option></select></label>
+          <label>WENA destination<select value={destination} onChange={e=>setDestination(e.target.value)}><option value="/">WENA home</option><option value="/jobs">Errand marketplace</option><option value="/signup">Create a WENA account</option></select></label><label>Campaign<select value={campaignId} onChange={e=>setCampaignId(e.target.value)}><option value="">General WENA referral</option>{(data.campaigns||[]).map((campaign:any)=><option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}</select></label>
           <button className="btn" disabled={busy}>Create referral link</button>
         </form>
         <div className="growth-link-list">{data.links.length?data.links.map(link=><div className="growth-link-row" key={link.id}><div><strong>{link.code}</strong><span>{link.channel} · {link.destination_path}</span></div><a href={"/r/"+link.code} target="_blank" rel="noreferrer">Open link ↗</a><button type="button" className="btn ghost" onClick={()=>navigator.clipboard?.writeText(window.location.origin+"/r/"+link.code)}>Copy</button></div>):<p className="small">Your referral links will appear here.</p>}</div>
