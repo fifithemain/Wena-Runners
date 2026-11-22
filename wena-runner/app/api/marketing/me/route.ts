@@ -22,7 +22,7 @@ export async function GET() {
 
     const { data: partner, error: partnerError } = await supabase.from("marketing_partners").select("id,display_name,status,created_at").eq("profile_id", profile.id).maybeSingle();
     if (partnerError) throw partnerError;
-    if (!partner) return NextResponse.json({ enabled: true, profile: { fullName: profile.full_name, role: profile.role }, partner: null, grants: [], applications: [], links: [], assignments: [], ledger: [] }, { headers: { "Cache-Control": "no-store" } });
+    if (!partner) return NextResponse.json({ enabled: true, profile: { fullName: profile.full_name, role: profile.role }, partner: null, grants: [], applications: [], links: [], assignments: [], ledger: [], campaigns: [] }, { headers: { "Cache-Control": "no-store" } });
 
     const [grants, applications, links, assignments, ledger, eligibleRoles] = await Promise.all([
       supabase.from("marketing_partner_role_grants").select("id,role_key,status,granted_at,terms_version").eq("partner_id", partner.id).order("role_key"),
