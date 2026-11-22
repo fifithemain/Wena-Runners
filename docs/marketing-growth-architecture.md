@@ -121,6 +121,7 @@ The first user-facing growth loop is a Runner leaderboard and streak system, int
 Migrations applied to the active Supabase database and committed to the feature branch:
 - `20261122185528_runner_leaderboard_streak_rewards`
 - `20261122185542_leaderboard_include_neighbour_rank`
+- `20261122185920_leaderboard_completed_paid_index`
 
 ### Rollout gate
 The gamification feature flag remains OFF until the feature branch has passed a production build and preview verification. Enabling the trigger before the app code is deployed would begin recording streak events without a visible user experience, so activation must happen after deployment validation.
