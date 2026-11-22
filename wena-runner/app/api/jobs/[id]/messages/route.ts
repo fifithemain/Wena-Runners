@@ -55,7 +55,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { data: job } = await supabase
       .from("jobs")
       .select("customer_id,runner_id,status")
-      .eq("id", params.id)
+      .eq("id", id)
       .maybeSingle();
     if (!job || ![job.customer_id, job.runner_id].includes(profile.id) || !job.runner_id) {
       return fail("Chat is only available to errand participants after a Runner is assigned.", 403);
