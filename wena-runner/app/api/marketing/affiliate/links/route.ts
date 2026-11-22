@@ -26,9 +26,15 @@ export async function POST(request: Request) {
     if (!partner) return fail("Apply for and activate your Affiliate role first.", 403);
     const { data: grant } = await supabase.from("marketing_partner_role_grants").select("id").eq("partner_id", partner.id).eq("role_key", "affiliate").eq("status", "active").maybeSingle();
     if (!grant) return fail("Your Affiliate access is not active.", 403);
+    const campaignId = typeof body.campaignId === "string" && body.campaignId ? body.campaignId : null;
+    if (campaignId) {
+      const { data: campaignRole } = await supabase.from("marketing_campaign_roles").select("campaign_id").eq("campaign_id",campaignId).eq("role_key","affiliate").maybeSingle();
+      const { data: campaign } = await supabase.from("marketing_campaigns").select("id,status").eq("id",campaignId).eq("status","active").maybeSingle();
+      if (!campaignRole || !campaign) return fail("Choose an active Affiliate campaign.",409);
+    }
     const code = randomBytes(6).toString("hex").toUpperCase();
     const { data, error } = await supabase.from("marketing_tracking_links")
-      .insert({ partner_id: partner.id, code, destination_path: destination, channel })
+      .insert({ partner_id: partner.id, campaign_id: campaignId, code, destination_path: destination, channel })
       .select("id,code,destination_path,channel,status,created_at").single();
     if (error) throw error;
     const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://wena-runners.vercel.app").replace(/\/$/, "");
