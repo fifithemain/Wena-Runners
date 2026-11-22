@@ -52,6 +52,7 @@ export async function POST(request:Request) {
       if(error) return fail(error.code==="23505"?"That campaign slug is already in use.":error.message,409);
       const {error:roleError}=await supabase.from("marketing_campaign_roles").insert(roles.map((role_key:string)=>({campaign_id:campaign.id,role_key})));
       if(roleError) return fail("Campaign was created but role eligibility could not be saved. Please contact support.",500);
+      await supabase.from("marketing_audit_log").insert({action:"campaign_created",target_type:"marketing_campaign",target_id:campaign.id,metadata:{campaign_type:type,slug}});
       return NextResponse.json({campaign},{status:201});
     }
     if(body.action==="configure_affiliate_rule") {
@@ -66,6 +67,7 @@ export async function POST(request:Request) {
         currency:"ZAR",enabled:body.enabled===true,
       },{onConflict:"campaign_id,role_key,reward_type"}).select("id,campaign_id,calculation,amount,cap_amount,enabled").single();
       if(error) throw error;
+      await supabase.from("marketing_audit_log").insert({action:"affiliate_reward_rule_configured",target_type:"marketing_reward_rule",target_id:data.id,metadata:{campaign_id:campaignId,enabled:body.enabled===true,calculation,amount}});
       return NextResponse.json({rule:data});
     }
     if(body.action==="set_campaign_status") {
@@ -81,6 +83,7 @@ export async function POST(request:Request) {
       const {data,error}=await supabase.from("marketing_campaigns").update({status,updated_at:new Date().toISOString()}).eq("id",campaignId).select("id,status").maybeSingle();
       if(error) throw error;
       if(!data) return fail("Campaign not found.",404);
+      await supabase.from("marketing_audit_log").insert({action:"campaign_status_changed",target_type:"marketing_campaign",target_id:data.id,metadata:{status}});
       return NextResponse.json({campaign:data});
     }
     if(body.action==="assign_creator") {
@@ -99,6 +102,7 @@ export async function POST(request:Request) {
         assignment_id:assignment.id,title,brief,due_at:body.dueAt||null,
       }).select("id,title").single();
       if(deliverableError) return fail("Assignment created but deliverable could not be added.",500);
+      await supabase.from("marketing_audit_log").insert({action:"creator_campaign_invited",target_type:"marketing_campaign_assignment",target_id:assignment.id,metadata:{campaign_id:campaignId,partner_id:partnerId,agreed_fee_zar:fee,deliverable_id:deliverable.id}});
       return NextResponse.json({assignment,deliverable},{status:201});
     }
     return fail("Invalid campaign action.");
