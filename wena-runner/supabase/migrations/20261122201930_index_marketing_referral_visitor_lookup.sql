@@ -1,0 +1,1 @@
+create index if not exists marketing_attributions_visitor_idx on public.marketing_attributions(anonymous_visitor_key,first_seen_at desc) where anonymous_visitor_key is not null;
