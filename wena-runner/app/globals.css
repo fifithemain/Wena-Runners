@@ -920,3 +920,10 @@ img, svg { max-width: 100%; }
 .growth-campaign-form>button { justify-self:start; }
 .campaign-picker { max-width:440px; }
 @media(max-width:620px) { .growth-campaign-form { grid-template-columns:1fr; } .growth-campaign-form .campaign-wide { grid-column:auto; } }
+
+.growth-terms-document { max-width:860px; margin:18px auto 60px; padding:28px; }
+.growth-terms-document h2 { margin:24px 0 7px; font:700 20px Georgia,serif; }
+.growth-terms-document h2:first-child { margin-top:0; }
+.growth-terms-document p { color:var(--ink-soft); font-size:14px; line-height:1.75; }
+.growth-terms-document .small { margin-top:28px; padding-top:14px; border-top:1px solid var(--line); font-size:11px; }
+.growth-terms a { color:var(--green-dark); text-decoration:underline; font-weight:800; }
