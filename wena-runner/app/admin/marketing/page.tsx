@@ -32,7 +32,7 @@ export default function MarketingAdminPage() {
   const apps=data?.applications||[];
   const grants=data?.grants||[];
   return <main className="admin-growth-page">
-    <nav className="shell nav"><Link href="/" className="brand"><span className="brand-symbol">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link><Link href="/admin">Admin desk</Link></nav>
+    <nav className="shell nav"><Link href="/" className="brand"><span className="brand-symbol">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link><div className="growth-grant-actions"><Link href="/admin">Admin desk</Link><Link href="/admin/marketing/campaigns">Campaigns & assignments</Link></div></nav>
     <section className="shell">
       <header className="pagehead"><p className="growth-eyebrow">WENA ADMINISTRATION</p><h1>Growth programme</h1><p className="muted">Review Affiliate and Creator applications independently. Every approval grants access to the applicant’s existing WENA account.</p></header>
       {error&&<p className="error" role="alert">{error}</p>}
