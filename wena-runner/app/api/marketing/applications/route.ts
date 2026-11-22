@@ -45,11 +45,25 @@ export async function POST(request: Request) {
       portfolioUrl: typeof body.portfolioUrl === "string" && /^https:\/\//i.test(body.portfolioUrl) ? body.portfolioUrl.slice(0, 500) : "",
     };
     if (answers.motivation.length < 20) return fail("Tell us a little more about why you want to join (at least 20 characters).");
-    const { data: application, error: insertError } = await supabase.from("marketing_partner_applications")
-      .insert({ partner_id: partnerRow.id, role_key: roleKey, answers, terms_version: TERMS_VERSION })
-      .select("id,role_key,status,submitted_at").single();
-    if (insertError?.code === "23505") return fail("You already have an application under review for this role.", 409);
-    if (insertError) return fail("Your application could not be submitted. Please try again.", 500);
+    const { data: prior } = await supabase.from("marketing_partner_applications").select("id,status")
+      .eq("partner_id", partnerRow.id).eq("role_key", roleKey).order("submitted_at", { ascending: false }).limit(1).maybeSingle();
+    let application: any;
+    if (prior?.status === "pending") return fail("You already have an application under review for this role.", 409);
+    if (prior?.status === "more_information") {
+      const { data, error } = await supabase.from("marketing_partner_applications").update({
+        answers, terms_version: TERMS_VERSION, status: "pending", submitted_at: new Date().toISOString(),
+        reviewed_at: null, reviewed_by_profile_id: null, review_note: null, updated_at: new Date().toISOString(),
+      }).eq("id", prior.id).select("id,role_key,status,submitted_at").single();
+      if (error) return fail("Your updated application could not be submitted. Please try again.", 500);
+      application = data;
+    } else {
+      const { data, error } = await supabase.from("marketing_partner_applications")
+        .insert({ partner_id: partnerRow.id, role_key: roleKey, answers, terms_version: TERMS_VERSION })
+        .select("id,role_key,status,submitted_at").single();
+      if (error?.code === "23505") return fail("You already have an application under review for this role.", 409);
+      if (error) return fail("Your application could not be submitted. Please try again.", 500);
+      application = data;
+    }
     await supabase.from("marketing_audit_log").insert({
       actor_profile_id: profile.id, action: "application_submitted",
       target_type: "marketing_partner_application", target_id: application.id,
