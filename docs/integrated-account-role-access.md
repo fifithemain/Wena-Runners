@@ -287,7 +287,7 @@ Each phase is feature-flagged and must pass build, role matrix, RLS, ownership i
 - Replacing the existing Runner wallet, customer checkout, or Paystack flow.
 
 
-## Implementation status — 22 November 2026
+## Implementation status — 23 November 2026
 
 The first integrated Growth slice has been implemented on this feature branch:
 
@@ -305,10 +305,10 @@ The first integrated Growth slice has been implemented on this feature branch:
 
 - `marketing_feature_flags.growth_enabled` remains **false**. The latest GitHub Actions Next.js production build passes and `npm audit` reports zero vulnerabilities; a current Vercel preview and authenticated end-to-end smoke test are still required before activation.
 - Affiliate commission rules are disabled by default; WENA must explicitly configure and enable rates before activating an Affiliate campaign.
-- No Creator fees or Affiliate commissions are paid automatically. Growth payout request review/transfer controls and final payout reconciliation remain a separate implementation step.
-- Creator usage licences are modelled in the database but the consent/acceptance UI is not yet implemented.
+- No Creator fees or Affiliate commissions are paid automatically. Partners can submit role-specific payout requests; admins can move requests through processing, paid or rejected. Marking paid writes an idempotent ledger settlement after WENA manually transfers the funds and records a reference. Final live payout reconciliation remains required.
+- Creator invitations require an admin-supplied, versioned usage-licence text. Creators must explicitly accept the exact invitation terms before accepting the assignment; the accepted version and timestamp are recorded.
 - The existing admin console is password-header based; Growth deliberately reuses that same admin gate rather than creating a second admin identity. A centrally managed admin permission model should replace that legacy gate in a later security-hardening phase.
-- This feature branch is not merged or deployed to production. Vercel refused another preview deployment because the deployment API daily limit had been reached; retry preview deployment when the limit resets. Keep the feature flag OFF until that preview and authenticated smoke test pass.
+- This feature branch is not merged or deployed to production. A Vercel preview is READY, but the authenticated role/ownership/payment smoke test has not yet been completed. Keep the feature flag OFF until that test passes.
 
 
 Referral consent handling note: if a first-time visitor arrives before choosing referral measurement, the short referral code remains in the page URL only until they make a cookie choice. The code is recorded as an attribution only after explicit referral consent; declining or choosing analytics-only removes it from the URL without creating an attribution row.
