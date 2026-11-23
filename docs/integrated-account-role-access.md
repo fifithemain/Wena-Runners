@@ -317,3 +317,14 @@ Referral consent handling note: if a first-time visitor arrives before choosing 
 ### Dependency security update
 
 The application was upgraded from Next.js 14 / React 18 to Next.js 15.5.29 / React 19.2.3. PostCSS is pinned to 8.5.33 and Sharp to 0.35.5. The CI dependency audit now reports 0 total vulnerabilities, and the Next.js production build passes. Existing dynamic route handlers were migrated to asynchronous route parameters for Next.js 15 compatibility.
+
+
+
+### Creator usage licence and Growth payouts
+
+- Each Creator campaign invitation now carries a versioned usage-licence text snapshot. The Creator must read and explicitly accept that exact text before the invitation can be accepted. The accepted version and timestamp are recorded against the assignment; the admin must supply the licence wording before sending an invitation.
+- Growth payout destinations are stored on the Growth partner record, separately from the existing Runner payout profile fields.
+- Partners can request payouts per active Growth role from approved ledger balances. Pending and processing requests reserve the requested amount so it cannot be requested twice.
+- Admin payout review progresses through pending → processing → paid or rejected. Marking paid requires a transfer reference and creates an immutable, idempotent paid ledger entry. No bank transfer is initiated automatically; WENA performs the transfer and records its reference.
+- Payout request and settlement RPCs are service-role-only. Payout requests remain RLS-protected with no anon/authenticated table privileges.
+- Database smoke tests covered request creation, balance reservation, overspend rejection, processing, paid settlement and the ledger entry. Test data was rolled back.
