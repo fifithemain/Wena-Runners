@@ -49,7 +49,7 @@ export default function GrowthCampaignAdmin() {
   const creatorOptions=activeCreators.map((g:any)=>({id:g.partner_id,name:data.partners?.find((p:any)=>p.id===g.partner_id)?.display_name||"Approved creator"}));
   const selectedCampaign=data?.campaigns?.find((c:any)=>c.id===campaignId);
   const selectedRules=(data?.rules||[]).filter((r:any)=>r.campaign_id===campaignId);
-  return <main className="admin-growth-page"><nav className="shell nav"><Link href="/" className="brand"><span className="brand-symbol">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link><Link href="/admin/marketing">Growth applications</Link></nav>
+  return <main className="admin-growth-page"><nav className="shell nav"><Link href="/" className="brand"><span className="brand-symbol">w</span><span className="brand-wordmark">wena<span>runners</span></span></Link><div className="growth-grant-actions"><Link href="/admin/marketing">Growth applications</Link><Link href="/admin/marketing/payouts">Growth payouts</Link></div></nav>
     <section className="shell"><header className="pagehead"><p className="growth-eyebrow">WENA ADMINISTRATION</p><h1>Growth campaigns</h1><p className="muted">Create campaigns, configure commission rules, and invite approved Creators to deliverables.</p></header>
       {error&&<p className="error" role="alert">{error}</p>}{success&&<p className="success" role="status">{success}</p>}
       {!data&&<div className="panel growth-admin-login"><label>Admin password<input type="password" value={password} onChange={e=>setPassword(e.target.value)}/></label><button className="btn" onClick={load}>Open campaigns</button></div>}
