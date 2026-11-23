@@ -110,6 +110,31 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
     finally { setBusy(false); }
   }
 
+  async function savePayoutDetails(event: React.FormEvent) {
+    event.preventDefault();setBusy(true);setError("");setSuccess("");setPayoutError("");
+    try {
+      const response=await fetch("/api/marketing/payouts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_payout_details",method:payoutMethod,accountName:payoutAccountName,accountDetails:payoutAccountDetails})});
+      const result=await response.json();
+      if(!response.ok) throw new Error(result.error||"Could not save payout details.");
+      setSuccess("Your Growth payout destination has been saved.");
+      await loadPayouts();
+    } catch(cause) { setPayoutError(cause instanceof Error?cause.message:"Could not save payout details."); }
+    finally { setBusy(false); }
+  }
+
+  async function requestPayout(roleKey:"affiliate"|"creator") {
+    setBusy(true);setError("");setSuccess("");setPayoutError("");
+    try {
+      const response=await fetch("/api/marketing/payouts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"request_payout",roleKey,amount:Number(payoutAmounts[roleKey])})});
+      const result=await response.json();
+      if(!response.ok) throw new Error(result.error||"Could not request payout.");
+      setPayoutAmounts({...payoutAmounts,[roleKey]:""});
+      setSuccess("Your payout request has been submitted. The amount is reserved while WENA reviews it.");
+      await loadPayouts();
+    } catch(cause) { setPayoutError(cause instanceof Error?cause.message:"Could not request payout."); }
+    finally { setBusy(false); }
+  }
+
   async function submitDeliverable(deliverableId: string) {
     setBusy(true); setError(""); setSuccess("");
     try {
