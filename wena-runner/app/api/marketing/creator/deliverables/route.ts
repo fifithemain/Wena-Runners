@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const { data: grant } = await supabase.from("marketing_partner_role_grants").select("id").eq("partner_id", partner.id).eq("role_key", "creator").eq("status", "active").maybeSingle();
     if (!grant) return fail("Your Creator access is not active.", 403);
     const { data: deliverable, error: lookupError } = await supabase.from("marketing_creator_deliverables")
-      .select("id,assignment_id,assignment:marketing_campaign_assignments!inner(partner_id,role_key,status)")
+      .select("id,assignment_id,assignment:marketing_campaign_assignments!inner(id,partner_id,role_key,status)")
       .eq("id", body.deliverableId).maybeSingle();
     if (lookupError) throw lookupError;
     const assignment = Array.isArray(deliverable?.assignment) ? deliverable.assignment[0] : deliverable?.assignment;
