@@ -4,6 +4,8 @@ on:
     branches: [main, feat/integrated-marketing-foundation]
   pull_request:
     branches: [main]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,17 +17,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: echo "Validating WENA Runners"
-      - run: npm install
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.28.0 --activate
+      - name: Regenerate and commit pnpm lockfile
+        run: |
+          pnpm install --lockfile-only --no-frozen-lockfile
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/feat/integrated-marketing-foundation" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pnpm-lock.yaml
+            if ! git diff --cached --quiet; then
+              git commit -m "build: sync pnpm lockfile with patched dependencies"
+              git push origin "HEAD:${GITHUB_REF_NAME}"
+            fi
+          fi
+      - run: pnpm install --frozen-lockfile
       - name: Report dependency security advisories
         run: |
-          npm audit --json > npm-audit.json || true
+          pnpm audit --json > pnpm-audit.json || true
           node <<'NODE'
-          const audit = require('./npm-audit.json');
-          console.log('Dependency audit summary:', JSON.stringify(audit.metadata?.vulnerabilities || {}));
+          const audit = require('./pnpm-audit.json');
+          const summary = audit.metadata?.vulnerabilities || audit.vulnerabilities || {};
+          console.log('Dependency audit summary:', JSON.stringify(summary));
           for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
-            const advisories = (item.via || []).filter((entry) => typeof entry === 'object').map((entry) => entry.title).filter(Boolean);
-            console.log(name + ': ' + item.severity + ' | range: ' + item.range + ' | ' + advisories.join('; '));
+            console.log(name + ': ' + item.severity + ' | ' + (item.title || item.name || 'advisory'));
           }
           NODE
-      - run: npm run build
+      - run: pnpm run build
