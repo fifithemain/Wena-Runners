@@ -927,3 +927,9 @@ img, svg { max-width: 100%; }
 .growth-terms-document p { color:var(--ink-soft); font-size:14px; line-height:1.75; }
 .growth-terms-document .small { margin-top:28px; padding-top:14px; border-top:1px solid var(--line); font-size:11px; }
 .growth-terms a { color:var(--green-dark); text-decoration:underline; font-weight:800; }
+
+.growth-license-panel{margin:16px 0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-soft,#f7faf8)}
+.growth-license-panel>p{white-space:pre-wrap;line-height:1.65;font-size:13px;color:var(--ink-soft);max-height:260px;overflow:auto}
+.growth-payout-request{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:12px}
+.growth-payout-request input{min-width:0;width:100%}
+@media(max-width:640px){.growth-payout-request{grid-template-columns:1fr}.growth-payout-request .btn{width:100%}}
