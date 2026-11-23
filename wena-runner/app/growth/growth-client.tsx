@@ -29,6 +29,25 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
   const [campaignId,setCampaignId] = useState("");
   const [deliverableNotes,setDeliverableNotes] = useState<Record<string,string>>({});
   const [deliverableUrls,setDeliverableUrls] = useState<Record<string,string>>({});
+  const [licenseAccepted,setLicenseAccepted] = useState<Record<string,boolean>>({});
+  const [payoutData,setPayoutData] = useState<any>(null);
+  const [payoutError,setPayoutError] = useState("");
+  const [payoutMethod,setPayoutMethod] = useState("");
+  const [payoutAccountName,setPayoutAccountName] = useState("");
+  const [payoutAccountDetails,setPayoutAccountDetails] = useState("");
+  const [payoutAmounts,setPayoutAmounts] = useState<Record<string,string>>({affiliate:"",creator:""});
+
+  async function loadPayouts() {
+    setPayoutError("");
+    try {
+      const response=await fetch("/api/marketing/payouts",{cache:"no-store"});
+      const result=await response.json();
+      if(!response.ok) throw new Error(result.error||"Could not load payout details.");
+      setPayoutData(result);
+      setPayoutMethod(result.payoutProfile?.method||"");
+      setPayoutAccountName(result.payoutProfile?.accountName||"");
+    } catch(cause) { setPayoutError(cause instanceof Error?cause.message:"Could not load payout details."); }
+  }
 
   async function load() {
     setError("");
@@ -37,6 +56,7 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not load Growth.");
       setData(result);
+      await loadPayouts();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not load Growth."); }
     finally { setLoading(false); }
   }
@@ -78,10 +98,10 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
     finally { setBusy(false); }
   }
 
-  async function respondToInvitation(assignmentId: string, status: "accepted"|"declined") {
+  async function respondToInvitation(assignmentId: string, status: "accepted"|"declined", acceptUsageLicense=false) {
     setBusy(true); setError(""); setSuccess("");
     try {
-      const response=await fetch("/api/marketing/creator/assignments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assignmentId,status})});
+      const response=await fetch("/api/marketing/creator/assignments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assignmentId,status,acceptUsageLicense})});
       const result=await response.json();
       if(!response.ok) throw new Error(result.error||"Could not update invitation.");
       setSuccess(status==="accepted"?"Creator campaign accepted.":"Creator invitation declined.");
