@@ -195,6 +195,29 @@ export default function GrowthClient({ name, role, signedIn }: { name: string; r
         </article>) : <div className="growth-empty"><strong>No creator briefs yet</strong><p>When WENA invites you to a campaign, the brief, deliverables, deadline, and agreed fee will appear here.</p></div>}
       </section>}
 
+      {data.partner&&<section className="growth-module">
+        <div className="growth-section-head"><div><h2>Growth payouts</h2><p>Set your payout destination and request approved rewards from each active Growth role.</p></div></div>
+        {payoutError&&<p className="error" role="alert">{payoutError}</p>}
+        <form className="growth-campaign-form" onSubmit={savePayoutDetails}>
+          <label>Payout method<input required maxLength={60} value={payoutMethod} onChange={e=>setPayoutMethod(e.target.value)} placeholder="Bank transfer, PayShap, etc."/></label>
+          <label>Account holder name<input required maxLength={120} value={payoutAccountName} onChange={e=>setPayoutAccountName(e.target.value)} placeholder="Name on your account"/></label>
+          <label className="campaign-wide">Payout destination details<input required minLength={4} maxLength={500} type="text" value={payoutAccountDetails} onChange={e=>setPayoutAccountDetails(e.target.value)} placeholder="Bank name and account number, or your approved payment destination"/></label>
+          <p className="small campaign-wide">These details are visible only to WENA payout administrators. Never enter a card PIN, password or one-time password.</p>
+          <button className="btn" disabled={busy||!payoutMethod.trim()||!payoutAccountName.trim()||payoutAccountDetails.trim().length<4}>Save payout destination</button>
+        </form>
+        <div className="growth-stats">
+          {(["affiliate","creator"] as const).filter(roleKey=>activeRoles.has(roleKey)).map(roleKey=>{
+            const balance=payoutData?.balances?.[roleKey]||{approvedNet:0,reserved:0,available:0};
+            return <article className="growth-stat" key={roleKey}><span>{roleNames[roleKey]} available</span><strong>{money(balance.available)}</strong><small>{money(balance.reserved)} reserved · {money(balance.approvedNet)} net approved</small>
+              <div className="growth-payout-request"><input aria-label={roleNames[roleKey]+" payout amount"} type="number" min="1" max={Math.max(0,balance.available)} step="0.01" value={payoutAmounts[roleKey]||""} onChange={e=>setPayoutAmounts({...payoutAmounts,[roleKey]:e.target.value})} placeholder="Amount in ZAR"/><button className="btn" type="button" disabled={busy||!payoutData?.payoutProfile?.configured||Number(payoutAmounts[roleKey])<1||Number(payoutAmounts[roleKey])>balance.available} onClick={()=>requestPayout(roleKey)}>Request payout</button></div>
+            </article>;
+          })}
+        </div>
+        {!payoutData?.payoutProfile?.configured&&<p className="small">Save all three payout destination fields before requesting a payout.</p>}
+        <h3>Your payout requests</h3>
+        {(payoutData?.requests||[]).length? <div className="growth-ledger">{payoutData.requests.map((r:any)=><div className="growth-ledger-row" key={r.id}><div><strong>{roleNames[r.role_key]} · {money(r.amount_zar)}</strong><span>{new Date(r.created_at).toLocaleDateString("en-ZA")}{r.payout_reference?" · Ref "+r.payout_reference:""}{r.admin_note?" · "+r.admin_note:""}</span></div><span className={"growth-state "+r.status}>{label(r.status)}</span></div>)}</div>:<p className="small">You have not requested a Growth payout yet.</p>}
+      </section>}
+
       {data.ledger.length>0 && <section className="growth-module"><div className="growth-section-head"><div><h2>Growth rewards</h2><p>Affiliate commissions and Creator fees are shown separately from Runner earnings.</p></div></div><div className="growth-ledger">{data.ledger.map(entry=><div className="growth-ledger-row" key={entry.id}><div><strong>{entry.reward_type.replaceAll("_"," ")} · {roleNames[entry.role_key]}</strong><span>{entry.description || label(entry.entry_type)} · {new Date(entry.created_at).toLocaleDateString("en-ZA")}</span></div><div><strong>{money(entry.amount_zar)}</strong><span>{label(entry.entry_type)}</span></div></div>)}</div></section>}
     </section>
 
