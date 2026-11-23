@@ -28,11 +28,10 @@ export async function GET() {
     const supabase=db();
     const {data:flag}=await supabase.from("marketing_feature_flags").select("growth_enabled").eq("id",true).maybeSingle();
     if(!flag?.growth_enabled) return NextResponse.json({enabled:false},{headers:{"Cache-Control":"no-store"}});
-    const [{data:partner,error:partnerError},{data:profileData,error:profileError}]=await Promise.all([
-      supabase.from("marketing_partners").select("id,status").eq("profile_id",profile.id).maybeSingle(),
-      supabase.from("profiles").select("payout_method,payout_account_name,payout_account_details").eq("id",profile.id).maybeSingle()
-    ]);
-    if(partnerError||profileError) throw partnerError||profileError;
+    const {data:partner,error:partnerError}=await supabase.from("marketing_partners")
+      .select("id,status,payout_method,payout_account_name,payout_account_details")
+      .eq("profile_id",profile.id).maybeSingle();
+    if(partnerError) throw partnerError;
     if(!partner) return NextResponse.json({balances:{affiliate:{approvedNet:0,reserved:0,available:0},creator:{approvedNet:0,reserved:0,available:0}},requests:[],payoutProfile:{method:"",accountName:"",configured:false}},{headers:{"Cache-Control":"no-store"}});
     const [ledgerResult,requestResult,grantResult]=await Promise.all([
       supabase.from("marketing_reward_ledger").select("role_key,entry_type,reward_type,amount_zar").eq("partner_id",partner.id),
@@ -45,7 +44,7 @@ export async function GET() {
     const activeRoles=(grantResult.data||[]).filter(g=>g.status==="active").map(g=>g.role_key);
     return NextResponse.json({
       balances,requests,activeRoles,
-      payoutProfile:{method:profileData?.payout_method||"",accountName:profileData?.payout_account_name||"",configured:!!(profileData?.payout_method?.trim()&&profileData?.payout_account_name?.trim()&&profileData?.payout_account_details?.trim())}
+      payoutProfile:{method:partner.payout_method||"",accountName:partner.payout_account_name||"",configured:!!(partner.payout_method?.trim()&&partner.payout_account_name?.trim()&&partner.payout_account_details?.trim())}
     },{headers:{"Cache-Control":"no-store, max-age=0"}});
   } catch(cause) {
     console.error("Growth payout summary failed:",cause);
@@ -66,9 +65,12 @@ export async function POST(request:Request) {
       const accountName=typeof body.accountName==="string"?body.accountName.trim().slice(0,120):"";
       const accountDetails=typeof body.accountDetails==="string"?body.accountDetails.trim().slice(0,500):"";
       if(!method||!accountName||accountDetails.length<4) return fail("Enter your payout method, account holder name and payment details.");
-      const {error}=await supabase.from("profiles").update({payout_method:method,payout_account_name:accountName,payout_account_details:accountDetails}).eq("id",profile.id);
+      const {data:partner,error:partnerError}=await supabase.from("marketing_partners").select("id").eq("profile_id",profile.id).eq("status","active").maybeSingle();
+      if(partnerError) throw partnerError;
+      if(!partner) return fail("Your Growth partner profile is not active.",403);
+      const {error}=await supabase.from("marketing_partners").update({payout_method:method,payout_account_name:accountName,payout_account_details:accountDetails}).eq("id",partner.id).eq("profile_id",profile.id);
       if(error) throw error;
-      await supabase.from("marketing_audit_log").insert({actor_profile_id:profile.id,action:"growth_payout_details_updated",target_type:"profile",target_id:profile.id,metadata:{method}});
+      await supabase.from("marketing_audit_log").insert({actor_profile_id:profile.id,action:"growth_payout_details_updated",target_type:"marketing_partner",target_id:partner.id,metadata:{method}});
       return NextResponse.json({ok:true});
     }
     if(body.action==="request_payout") {
