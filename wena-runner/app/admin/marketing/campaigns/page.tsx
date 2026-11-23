@@ -23,6 +23,8 @@ export default function GrowthCampaignAdmin() {
   const [deliverableTitle,setDeliverableTitle]=useState("");
   const [brief,setBrief]=useState("");
   const [dueAt,setDueAt]=useState("");
+  const [usageLicenseVersion,setUsageLicenseVersion]=useState("WENA-CREATOR-1.0");
+  const [usageLicenseText,setUsageLicenseText]=useState("");
   const [reviewNotes,setReviewNotes]=useState<Record<string,string>>({});
 
   async function load() {
@@ -77,14 +79,16 @@ export default function GrowthCampaignAdmin() {
         </section>
 
         <section className="growth-module"><h2>Invite an approved Creator</h2><p className="muted">An invitation is attached to the creator’s existing WENA profile. The agreed fee is recorded before work begins.</p>
-          <form className="growth-campaign-form" onSubmit={e=>{e.preventDefault();act({action:"assign_creator",campaignId,partnerId:creatorId,agreedFee:Number(fee),deliverableTitle,brief,dueAt:dueAt?new Date(dueAt).toISOString():null});}}>
+          <form className="growth-campaign-form" onSubmit={e=>{e.preventDefault();act({action:"assign_creator",campaignId,partnerId:creatorId,agreedFee:Number(fee),deliverableTitle,brief,dueAt:dueAt?new Date(dueAt).toISOString():null,usageLicenseVersion,usageLicenseText});}}>
             <label>Campaign<select required value={campaignId} onChange={e=>setCampaignId(e.target.value)}><option value="">Select campaign</option>{data.campaigns.filter((c:any)=>["creator","mixed"].includes(c.campaign_type)).map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
             <label>Approved Creator<select required value={creatorId} onChange={e=>setCreatorId(e.target.value)}><option value="">Select creator</option>{creatorOptions.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
             <label>Agreed fee (ZAR)<input required type="number" min="0" step="0.01" value={fee} onChange={e=>setFee(e.target.value)}/></label>
             <label>Deliverable title<input required maxLength={150} value={deliverableTitle} onChange={e=>setDeliverableTitle(e.target.value)} placeholder="One launch video"/></label>
             <label className="campaign-wide">Brief<textarea rows={3} maxLength={2000} value={brief} onChange={e=>setBrief(e.target.value)} placeholder="Describe format, content requirements and review criteria."/></label>
             <label>Due date<input type="datetime-local" value={dueAt} onChange={e=>setDueAt(e.target.value)}/></label>
-            <button className="btn" disabled={busy||!campaignId||!creatorId}>Send creator invitation</button>
+            <label>Usage licence version<input required maxLength={60} value={usageLicenseVersion} onChange={e=>setUsageLicenseVersion(e.target.value)} placeholder="WENA-CREATOR-1.0"/></label>
+            <label className="campaign-wide">Creator usage licence<textarea required minLength={50} maxLength={6000} rows={6} value={usageLicenseText} onChange={e=>setUsageLicenseText(e.target.value)} placeholder="Enter the exact usage rights WENA is requesting for this deliverable. The Creator must read and accept this text before the invitation can be accepted."/></label>
+            <button className="btn" disabled={busy||!campaignId||!creatorId||usageLicenseText.trim().length<50||!usageLicenseVersion.trim()}>Send creator invitation</button>
           </form>
         </section>
 
