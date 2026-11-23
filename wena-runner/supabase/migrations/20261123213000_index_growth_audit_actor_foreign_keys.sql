@@ -1,0 +1,4 @@
+create index if not exists marketing_campaign_assignments_usage_license_accepted_by_idx
+  on public.marketing_campaign_assignments(usage_license_accepted_by_profile_id);
+create index if not exists marketing_payout_requests_processed_by_idx
+  on public.marketing_payout_requests(processed_by_profile_id);

@@ -48,11 +48,12 @@ async function createYocoCheckout(total: number, jobId: string, customerId: stri
 
 export async function POST(
   request: Request,
-  { params }: { params: { segments: string[] } },
+  { params }: { params: Promise<{ segments: string[] }> },
 ) {
   try {
-    const [jobId, action] = params.segments;
-    if (!jobId || !action || params.segments.length !== 2) return error("Not found.", 404);
+    const { segments } = await params;
+    const [jobId, action] = segments;
+    if (!jobId || !action || segments.length !== 2) return error("Not found.", 404);
 
     const profile = await getCurrentProfile();
     if (!profile) return error("Sign in first.", 401);

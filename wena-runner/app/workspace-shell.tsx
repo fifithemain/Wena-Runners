@@ -2,9 +2,9 @@
 
 import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type WorkspaceSection = "jobs" | "messages" | "account" | "earnings";
+type WorkspaceSection = "jobs" | "messages" | "account" | "earnings" | "leaderboard" | "growth";
 
 function SignOutButton({ onError }: { onError: (message: string) => void }) {
   const { signOut } = useClerk();
@@ -35,6 +35,7 @@ export default function WorkspaceShell({
   children: React.ReactNode;
 }) {
   const [error, setError] = useState("");
+  useEffect(() => { fetch("/api/marketing/attribution/claim", { method: "POST" }).catch(() => undefined); }, []);
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const hasSession = signedIn ?? Boolean(name || role);
   const displayName = name || "Your account";
@@ -47,6 +48,8 @@ export default function WorkspaceShell({
   const links: { id: WorkspaceSection; label: string; icon: string }[] = [
     { id: "jobs", label: role === "runner" ? "Runner marketplace" : role === "both" ? "Errand workspace" : "My errands", icon: "▤" },
     { id: "messages", label: "Messages", icon: "◌" },
+    { id: "leaderboard", label: "Leaderboard", icon: "🏆" },
+    { id: "growth", label: "Growth", icon: "✦" },
     { id: "account", label: "Account", icon: "◎" },
     ...(role === "runner" || role === "both"
       ? [{ id: "earnings" as const, label: "Runner wallet", icon: "R" }]

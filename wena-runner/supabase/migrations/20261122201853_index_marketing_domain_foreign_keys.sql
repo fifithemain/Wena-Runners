@@ -1,0 +1,16 @@
+create index if not exists marketing_attributions_tracking_link_idx on public.marketing_attributions(tracking_link_id);
+create index if not exists marketing_audit_actor_idx on public.marketing_audit_log(actor_profile_id);
+create index if not exists marketing_campaign_assignments_partner_status_idx on public.marketing_campaign_assignments(partner_id,status,invited_at desc);
+create index if not exists marketing_campaigns_created_by_idx on public.marketing_campaigns(created_by_profile_id);
+create index if not exists marketing_conversions_attribution_idx on public.marketing_conversions(attribution_id);
+create index if not exists marketing_conversions_campaign_idx on public.marketing_conversions(campaign_id);
+create index if not exists marketing_conversions_partner_idx on public.marketing_conversions(partner_id,created_at desc);
+create index if not exists marketing_creator_deliverables_assignment_idx on public.marketing_creator_deliverables(assignment_id);
+create index if not exists marketing_creator_deliverables_reviewer_idx on public.marketing_creator_deliverables(reviewed_by_profile_id);
+create index if not exists marketing_creator_licenses_deliverable_idx on public.marketing_creator_usage_licenses(deliverable_id);
+create index if not exists marketing_applications_reviewer_idx on public.marketing_partner_applications(reviewed_by_profile_id);
+create index if not exists marketing_role_grants_granted_by_idx on public.marketing_partner_role_grants(granted_by_profile_id);
+create index if not exists marketing_payout_requests_partner_idx on public.marketing_payout_requests(partner_id,created_at desc);
+create index if not exists marketing_reward_ledger_created_by_idx on public.marketing_reward_ledger(created_by_profile_id);
+create index if not exists marketing_reward_ledger_related_idx on public.marketing_reward_ledger(related_entry_id);
+create index if not exists marketing_tracking_campaign_idx on public.marketing_tracking_links(campaign_id);
