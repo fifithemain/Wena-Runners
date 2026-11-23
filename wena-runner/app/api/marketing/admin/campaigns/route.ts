@@ -103,19 +103,24 @@ export async function POST(request:Request) {
       const campaignId=String(body.campaignId||""), partnerId=String(body.partnerId||"");
       const fee=Number(body.agreedFee), title=typeof body.deliverableTitle==="string"?body.deliverableTitle.trim().slice(0,150):"";
       const brief=typeof body.brief==="string"?body.brief.trim().slice(0,2000):"";
-      if(!campaignId||!partnerId||!title||!Number.isFinite(fee)||fee<0||fee>100000) return fail("Choose a creator, campaign, deliverable title and valid fee.");
+      const usageLicenseVersion=typeof body.usageLicenseVersion==="string"?body.usageLicenseVersion.trim().slice(0,60):"";
+      const usageLicenseText=typeof body.usageLicenseText==="string"?body.usageLicenseText.trim().slice(0,6000):"";
+      if(!campaignId||!partnerId||!title||!Number.isFinite(fee)||fee<0||fee>100000||!usageLicenseVersion||usageLicenseText.length<50)
+        return fail("Choose a creator and campaign, set the fee, and provide a versioned usage licence of at least 50 characters.");
       const {data:eligible}=await supabase.from("marketing_campaign_roles").select("campaign_id").eq("campaign_id",campaignId).eq("role_key","creator").maybeSingle();
       const {data:grant}=await supabase.from("marketing_partner_role_grants").select("id").eq("partner_id",partnerId).eq("role_key","creator").eq("status","active").maybeSingle();
       if(!eligible||!grant) return fail("This creator or campaign is not eligible for assignment.",403);
       const {data:assignment,error}=await supabase.from("marketing_campaign_assignments").insert({
         campaign_id:campaignId,partner_id:partnerId,role_key:"creator",status:"invited",agreed_fee_zar:fee,
+        usage_license_version:usageLicenseVersion,usage_license_text:usageLicenseText,
+        terms:{usage_license_version:usageLicenseVersion,usage_license_text:usageLicenseText},
       }).select("id").single();
       if(error) return fail(error.code==="23505"?"This creator already has an assignment for this campaign.":error.message,409);
       const {data:deliverable,error:deliverableError}=await supabase.from("marketing_creator_deliverables").insert({
         assignment_id:assignment.id,title,brief,due_at:body.dueAt||null,
       }).select("id,title").single();
       if(deliverableError) return fail("Assignment created but deliverable could not be added.",500);
-      await supabase.from("marketing_audit_log").insert({action:"creator_campaign_invited",target_type:"marketing_campaign_assignment",target_id:assignment.id,metadata:{campaign_id:campaignId,partner_id:partnerId,agreed_fee_zar:fee,deliverable_id:deliverable.id}});
+      await supabase.from("marketing_audit_log").insert({action:"creator_campaign_invited",target_type:"marketing_campaign_assignment",target_id:assignment.id,metadata:{campaign_id:campaignId,partner_id:partnerId,agreed_fee_zar:fee,deliverable_id:deliverable.id,usage_license_version:usageLicenseVersion}});
       return NextResponse.json({assignment,deliverable},{status:201});
     }
     return fail("Invalid campaign action.");
